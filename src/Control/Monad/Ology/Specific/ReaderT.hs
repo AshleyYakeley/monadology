@@ -9,6 +9,9 @@ import Control.Monad.Ology.General
 import Control.Monad.Trans.Reader hiding (liftCallCC, liftCatch)
 import Import
 
+with :: r -> ReaderT r m a -> ReaderT r m a
+with r = local $ \_ -> r
+
 instance TransConstraint Functor (ReaderT s) where
     hasTransConstraint = Dict
 

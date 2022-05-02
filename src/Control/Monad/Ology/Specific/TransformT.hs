@@ -57,14 +57,14 @@ transformParamRef ::
        forall m a. Monad m
     => Param m a
     -> Ref (TransformT m) a
-transformParamRef MkParam {..} = let
+transformParamRef param = let
     getD :: TransformT m a
     getD =
         MkTransformT $ \afr -> do
-            a <- askD
+            a <- askD param
             afr a
-    modifyD :: (a -> a) -> TransformT m ()
-    modifyD aa = MkTransformT $ \ufr -> localD aa $ ufr ()
+    putD :: a -> TransformT m ()
+    putD a = MkTransformT $ \ufr -> withD param a $ ufr ()
     in MkRef {..}
 
 liftTransformT ::

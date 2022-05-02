@@ -9,6 +9,21 @@ data Prod m a = MkProd
     , listenD :: forall r. m r -> m (r, a)
     }
 
+unitProd :: Applicative m => Prod m ()
+unitProd = MkProd (\() -> pure ()) $ fmap $ \r -> (r, ())
+
+pairProd ::
+       forall m a b. Applicative m
+    => Prod m a
+    -> Prod m b
+    -> Prod m (a, b)
+pairProd (MkProd tellA listenA) (MkProd tellB listenB) = let
+    tellAB :: (a, b) -> m ()
+    tellAB (a, b) = tellA a *> tellB b
+    listenAB :: m r -> m (r, (a, b))
+    listenAB m = fmap (\((r, a), b) -> (r, (a, b))) $ listenB (listenA m)
+    in MkProd tellAB listenAB
+
 listen_D :: Functor m => Prod m a -> m () -> m a
 listen_D p mu = fmap snd $ listenD p mu
 

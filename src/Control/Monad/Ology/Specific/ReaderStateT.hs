@@ -24,11 +24,11 @@ rsParamRef ::
        forall f m a. Monad m
     => Param f a
     -> Ref (ReaderStateT f m) a
-rsParamRef MkParam {..} = let
+rsParamRef param = let
     getD :: ReaderStateT f m a
     getD = do
         MkWMFunction ff <- get
-        lift $ ff askD
-    modifyD :: (a -> a) -> ReaderStateT f m ()
-    modifyD aa = updateRS $ localD aa
+        lift $ ff $ askD param
+    putD :: a -> ReaderStateT f m ()
+    putD a = updateRS $ withD param a
     in MkRef {..}

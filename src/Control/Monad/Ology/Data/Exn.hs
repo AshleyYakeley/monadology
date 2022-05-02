@@ -8,8 +8,17 @@ type Exn :: (Type -> Type) -> Type -> Type
 data Exn m e = MkExn
     { throwD :: forall a. e -> m a
     , catchD :: forall a. m a -> (e -> m a) -> m a
-    , maskD :: m -/-> m
     }
+
+voidExn :: Exn m Void
+voidExn = MkExn {throwD = absurd, catchD = \m _ -> m}
+
+eitherExn :: Exn m e1 -> Exn m e2 -> Exn m (Either e1 e2)
+eitherExn exn1 exn2 =
+    MkExn
+        { throwD = either (throwD exn1) (throwD exn2)
+        , catchD = \m k -> catchD exn1 (catchD exn2 m (k . Right)) (k . Left)
+        }
 
 tryD :: Monad m => Exn m e -> m a -> m (Result e a)
 tryD exn ma = catchD exn (fmap SuccessResult ma) $ \e -> return $ FailureResult e
@@ -26,21 +35,21 @@ onExceptionD ::
 onExceptionD exn ma handler = catchD exn ma $ \e -> handler >> throwD exn e
 
 bracketD ::
-       forall e m a b. Monad m
+       forall e m a b. MonadTunnelIO m
     => Exn m e
     -> m a
     -> (a -> m ())
     -> (a -> m b)
     -> m b
 bracketD exn before after thing =
-    maskD exn $ \restore -> do
+    mask $ \restore -> do
         a <- before
         r <- onExceptionD exn (restore (thing a)) (after a)
         _ <- after a
         return r
 
 finallyD ::
-       forall e m a. Monad m
+       forall e m a. MonadTunnelIO m
     => Exn m e
     -> m a
     -> m ()
@@ -48,7 +57,7 @@ finallyD ::
 finallyD exn ma handler = bracketD exn (return ()) (const handler) (const ma)
 
 bracket_D ::
-       forall e m. Monad m
+       forall e m. MonadTunnelIO m
     => Exn m e
     -> m ()
     -> m ()
@@ -65,38 +74,25 @@ mapExn f g exn =
                       case g e of
                           Nothing -> throwD exn e
                           Just e' -> handler e'
-        , maskD = maskD exn
         }
 
 liftExn ::
        forall e t m. (MonadTransTunnel t, Monad m)
     => Exn m e
     -> Exn (t m) e
-liftExn (MkExn t c m) = let
+liftExn (MkExn t c) = let
     t' :: forall a. e -> t m a
     t' e = lift $ t e
     c' :: forall a. t m a -> (e -> t m a) -> t m a
     c' tma handler = tunnel $ \unlift -> c (unlift tma) $ \e -> unlift $ handler e
-    m' :: t m -/-> t m
-    m' = backHoist m
-    in MkExn t' c' m'
+    in MkExn t' c'
 
 allExn ::
        forall m. MonadException m
     => Exn m (Exc m)
-allExn = MkExn throwExc catchExc $ runWMBackFunction id
-
-allIOExn ::
-       forall m. (MonadException m, MonadTunnelIO m)
-    => Exn m (Exc m)
-allIOExn = MkExn throwExc catchExc mask
+allExn = MkExn throwExc catchExc
 
 someExn ::
        forall e m. MonadCatch e m
     => Exn m e
-someExn = MkExn throw catch $ runWMBackFunction id
-
-someIOExn ::
-       forall e m. (MonadCatch e m, MonadTunnelIO m)
-    => Exn m e
-someIOExn = MkExn throw catch mask
+someExn = MkExn throw catch
