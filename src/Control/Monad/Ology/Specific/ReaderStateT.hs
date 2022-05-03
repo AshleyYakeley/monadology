@@ -25,10 +25,10 @@ rsParamRef ::
     => Param f a
     -> Ref (ReaderStateT f m) a
 rsParamRef param = let
-    getD :: ReaderStateT f m a
-    getD = do
+    refGet :: ReaderStateT f m a
+    refGet = do
         MkWMFunction ff <- get
-        lift $ ff $ askD param
-    putD :: a -> ReaderStateT f m ()
-    putD a = updateRS $ withD param a
+        lift $ ff $ paramAsk param
+    refPut :: a -> ReaderStateT f m ()
+    refPut a = updateRS $ paramWith param a
     in MkRef {..}

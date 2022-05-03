@@ -5,8 +5,8 @@ import Control.Monad.Ology.Specific.WriterT
 import Import
 
 data Prod m a = MkProd
-    { tellD :: a -> m ()
-    , listenD :: forall r. m r -> m (r, a)
+    { prodTell :: a -> m ()
+    , prodListen :: forall r. m r -> m (r, a)
     }
 
 unitProd :: Applicative m => Prod m ()
@@ -24,23 +24,23 @@ pairProd (MkProd tellA listenA) (MkProd tellB listenB) = let
     listenAB m = fmap (\((r, a), b) -> (r, (a, b))) $ listenB (listenA m)
     in MkProd tellAB listenAB
 
-listen_D :: Functor m => Prod m a -> m () -> m a
-listen_D p mu = fmap snd $ listenD p mu
+prodListen_ :: Functor m => Prod m a -> m () -> m a
+prodListen_ p mu = fmap snd $ prodListen p mu
 
 liftProd :: (MonadTransTunnel t, Monad m) => Prod m --> Prod (t m)
 liftProd (MkProd t l) =
     MkProd (\a -> lift $ t a) $ \tmr -> tunnel $ \unlift -> fmap (\(tun, a) -> fmap (\r -> (r, a)) tun) $ l $ unlift tmr
 
 writerProd :: Monad m => Prod (WriterT w m) w
-writerProd = MkProd {tellD = tell, listenD = listen}
+writerProd = MkProd {prodTell = tell, prodListen = listen}
 
 foldProd ::
        forall f m a. (Applicative f, Foldable f, Applicative m)
     => Prod m a
     -> Prod m (f a)
-foldProd (MkProd tellD listenD) = let
-    tellD' :: f a -> m ()
-    tellD' aa = for_ aa tellD
-    listenD' :: forall r. m r -> m (r, f a)
-    listenD' mr = fmap (\(r, a) -> (r, pure a)) $ listenD mr
-    in MkProd tellD' listenD'
+foldProd (MkProd prodTell prodListen) = let
+    prodTell' :: f a -> m ()
+    prodTell' aa = for_ aa prodTell
+    prodListen' :: forall r. m r -> m (r, f a)
+    prodListen' mr = fmap (\(r, a) -> (r, pure a)) $ prodListen mr
+    in MkProd prodTell' prodListen'

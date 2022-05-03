@@ -58,13 +58,13 @@ transformParamRef ::
     => Param m a
     -> Ref (TransformT m) a
 transformParamRef param = let
-    getD :: TransformT m a
-    getD =
+    refGet :: TransformT m a
+    refGet =
         MkTransformT $ \afr -> do
-            a <- askD param
+            a <- paramAsk param
             afr a
-    putD :: a -> TransformT m ()
-    putD a = MkTransformT $ \ufr -> withD param a $ ufr ()
+    refPut :: a -> TransformT m ()
+    refPut a = MkTransformT $ \ufr -> paramWith param a $ ufr ()
     in MkRef {..}
 
 liftTransformT ::

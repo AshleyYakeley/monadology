@@ -8,18 +8,18 @@ import Import
 type Lens' a b = forall f. Functor f => (b -> f b) -> a -> f a
 
 data Param m a = MkParam
-    { askD :: m a
-    , withD :: a -> m --> m
+    { paramAsk :: m a
+    , paramWith :: a -> m --> m
     }
 
-localD ::
+paramLocal ::
        forall m a. Monad m
     => Param m a
     -> (a -> a)
     -> m --> m
-localD param f mr = do
-    a <- askD param
-    withD param (f a) mr
+paramLocal param f mr = do
+    a <- paramAsk param
+    paramWith param (f a) mr
 
 lensMapParam ::
        forall m a b. Monad m
@@ -27,18 +27,18 @@ lensMapParam ::
     -> Param m a
     -> Param m b
 lensMapParam l param = let
-    askD' = fmap (\a -> getConst $ l Const a) $ askD param
-    withD' :: b -> m --> m
-    withD' b mr = do
-        a <- askD param
-        withD param (runIdentity $ l (\_ -> Identity b) a) mr
-    in MkParam askD' withD'
+    paramAsk' = fmap (\a -> getConst $ l Const a) $ paramAsk param
+    paramWith' :: b -> m --> m
+    paramWith' b mr = do
+        a <- paramAsk param
+        paramWith param (runIdentity $ l (\_ -> Identity b) a) mr
+    in MkParam paramAsk' paramWith'
 
 unitParam :: Applicative m => Param m ()
 unitParam = MkParam (pure ()) (\() -> id)
 
 pairParam :: Applicative m => Param m a -> Param m b -> Param m (a, b)
-pairParam pa pb = MkParam (liftA2 (,) (askD pa) (askD pb)) (\(a, b) -> withD pa a . withD pb b)
+pairParam pa pb = MkParam (liftA2 (,) (paramAsk pa) (paramAsk pb)) (\(a, b) -> paramWith pa a . paramWith pb b)
 
 liftParam :: (MonadTransTunnel t, Monad m) => Param m --> Param (t m)
 liftParam (MkParam a l) = MkParam (lift a) $ \aa -> hoist $ l aa

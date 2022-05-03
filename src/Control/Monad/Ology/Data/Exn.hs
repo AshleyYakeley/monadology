@@ -6,73 +6,73 @@ import Import
 
 type Exn :: (Type -> Type) -> Type -> Type
 data Exn m e = MkExn
-    { throwD :: forall a. e -> m a
-    , catchD :: forall a. m a -> (e -> m a) -> m a
+    { exnThrow :: forall a. e -> m a
+    , exnCatch :: forall a. m a -> (e -> m a) -> m a
     }
 
 voidExn :: Exn m Void
-voidExn = MkExn {throwD = absurd, catchD = \m _ -> m}
+voidExn = MkExn {exnThrow = absurd, exnCatch = \m _ -> m}
 
 eitherExn :: Exn m e1 -> Exn m e2 -> Exn m (Either e1 e2)
 eitherExn exn1 exn2 =
     MkExn
-        { throwD = either (throwD exn1) (throwD exn2)
-        , catchD = \m k -> catchD exn1 (catchD exn2 m (k . Right)) (k . Left)
+        { exnThrow = either (exnThrow exn1) (exnThrow exn2)
+        , exnCatch = \m k -> exnCatch exn1 (exnCatch exn2 m (k . Right)) (k . Left)
         }
 
-tryD :: Monad m => Exn m e -> m a -> m (Result e a)
-tryD exn ma = catchD exn (fmap SuccessResult ma) $ \e -> return $ FailureResult e
+exnTry :: Monad m => Exn m e -> m a -> m (Result e a)
+exnTry exn ma = exnCatch exn (fmap SuccessResult ma) $ \e -> return $ FailureResult e
 
-handleD :: Exn m e -> (e -> m a) -> m a -> m a
-handleD exn handler ma = catchD exn ma handler
+exnHandle :: Exn m e -> (e -> m a) -> m a -> m a
+exnHandle exn handler ma = exnCatch exn ma handler
 
-onExceptionD ::
+exnOnException ::
        forall e m a. Monad m
     => Exn m e
     -> m a
     -> m ()
     -> m a
-onExceptionD exn ma handler = catchD exn ma $ \e -> handler >> throwD exn e
+exnOnException exn ma handler = exnCatch exn ma $ \e -> handler >> exnThrow exn e
 
-bracketD ::
+exnBracket ::
        forall e m a b. MonadTunnelIO m
     => Exn m e
     -> m a
     -> (a -> m ())
     -> (a -> m b)
     -> m b
-bracketD exn before after thing =
+exnBracket exn before after thing =
     mask $ \restore -> do
         a <- before
-        r <- onExceptionD exn (restore (thing a)) (after a)
+        r <- exnOnException exn (restore (thing a)) (after a)
         _ <- after a
         return r
 
-finallyD ::
+exnFinally ::
        forall e m a. MonadTunnelIO m
     => Exn m e
     -> m a
     -> m ()
     -> m a
-finallyD exn ma handler = bracketD exn (return ()) (const handler) (const ma)
+exnFinally exn ma handler = exnBracket exn (return ()) (const handler) (const ma)
 
-bracket_D ::
+exnBracket_ ::
        forall e m. MonadTunnelIO m
     => Exn m e
     -> m ()
     -> m ()
     -> m --> m
-bracket_D exn before after thing = bracketD exn before (const after) (const thing)
+exnBracket_ exn before after thing = exnBracket exn before (const after) (const thing)
 
 mapExn :: (e2 -> e1) -> (e1 -> Maybe e2) -> Exn m e1 -> Exn m e2
 mapExn f g exn =
     MkExn
-        { throwD = throwD exn . f
-        , catchD =
+        { exnThrow = exnThrow exn . f
+        , exnCatch =
               \ma handler ->
-                  catchD exn ma $ \e ->
+                  exnCatch exn ma $ \e ->
                       case g e of
-                          Nothing -> throwD exn e
+                          Nothing -> exnThrow exn e
                           Just e' -> handler e'
         }
 
