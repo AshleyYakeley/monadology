@@ -16,6 +16,13 @@ data Ref m a = MkRef
     , refPut :: a -> m ()
     }
 
+instance Functor m => Invariant (Ref m) where
+    invmap f g (MkRef gt pt) = MkRef (fmap f gt) (pt . g)
+
+instance Applicative m => Productish (Ref m) where
+    pUnit = MkRef (pure ()) (\_ -> pure ())
+    ra <***> rb = MkRef (liftA2 (,) (refGet ra) (refGet rb)) $ \(a, b) -> refPut ra a *> refPut rb b
+
 refModify :: Monad m => Ref m a -> (a -> a) -> m ()
 refModify ref f = do
     a <- refGet ref
@@ -41,12 +48,6 @@ lensMapRef l ref = let
         a <- refGet ref
         refPut ref $ runIdentity $ l (\_ -> Identity b) a
     in MkRef refGet' refPut'
-
-unitRef :: Applicative m => Ref m ()
-unitRef = MkRef (pure ()) (\_ -> pure ())
-
-pairRef :: Applicative m => Ref m a -> Ref m b -> Ref m (a, b)
-pairRef ra rb = MkRef (liftA2 (,) (refGet ra) (refGet rb)) $ \(a, b) -> refPut ra a *> refPut rb b
 
 liftRef :: (MonadTrans t, Monad m) => Ref m --> Ref (t m)
 liftRef (MkRef g m) = MkRef (lift g) $ \a -> lift $ m a

@@ -22,5 +22,6 @@ import Data.String as I (IsString(..))
 import Data.Traversable as I
 import Data.Tuple as I
 import Data.Type.Witness as I
+import Data.TypeRig as I
 import Data.Void as I
 import Prelude as I hiding ((.), fail, id)

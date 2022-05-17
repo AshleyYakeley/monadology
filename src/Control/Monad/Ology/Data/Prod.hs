@@ -9,20 +9,18 @@ data Prod m a = MkProd
     , prodListen :: forall r. m r -> m (r, a)
     }
 
-unitProd :: Applicative m => Prod m ()
-unitProd = MkProd (\() -> pure ()) $ fmap $ \r -> (r, ())
+instance Functor m => Invariant (Prod m) where
+    invmap f g (MkProd t l) = MkProd (t . g) (\mr -> fmap (fmap f) $ l mr)
 
-pairProd ::
-       forall m a b. Applicative m
-    => Prod m a
-    -> Prod m b
-    -> Prod m (a, b)
-pairProd (MkProd tellA listenA) (MkProd tellB listenB) = let
-    tellAB :: (a, b) -> m ()
-    tellAB (a, b) = tellA a *> tellB b
-    listenAB :: m r -> m (r, (a, b))
-    listenAB m = fmap (\((r, a), b) -> (r, (a, b))) $ listenB (listenA m)
-    in MkProd tellAB listenAB
+instance Applicative m => Productish (Prod m) where
+    pUnit = MkProd (\() -> pure ()) $ fmap $ \r -> (r, ())
+    (<***>) :: forall a b. Prod m a -> Prod m b -> Prod m (a, b)
+    MkProd tellA listenA <***> MkProd tellB listenB = let
+        tellAB :: (a, b) -> m ()
+        tellAB (a, b) = tellA a *> tellB b
+        listenAB :: m r -> m (r, (a, b))
+        listenAB m = fmap (\((r, a), b) -> (r, (a, b))) $ listenB (listenA m)
+        in MkProd tellAB listenAB
 
 prodListen_ :: Functor m => Prod m a -> m () -> m a
 prodListen_ p mu = fmap snd $ prodListen p mu

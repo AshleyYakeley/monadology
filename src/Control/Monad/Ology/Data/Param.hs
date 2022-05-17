@@ -12,6 +12,13 @@ data Param m a = MkParam
     , paramWith :: a -> m --> m
     }
 
+instance Functor m => Invariant (Param m) where
+    invmap f g (MkParam a w) = MkParam (fmap f a) (\b mr -> w (g b) mr)
+
+instance Applicative m => Productish (Param m) where
+    pUnit = MkParam (pure ()) (\() -> id)
+    pa <***> pb = MkParam (liftA2 (,) (paramAsk pa) (paramAsk pb)) (\(a, b) -> paramWith pa a . paramWith pb b)
+
 paramLocal ::
        forall m a. Monad m
     => Param m a
@@ -33,12 +40,6 @@ lensMapParam l param = let
         a <- paramAsk param
         paramWith param (runIdentity $ l (\_ -> Identity b) a) mr
     in MkParam paramAsk' paramWith'
-
-unitParam :: Applicative m => Param m ()
-unitParam = MkParam (pure ()) (\() -> id)
-
-pairParam :: Applicative m => Param m a -> Param m b -> Param m (a, b)
-pairParam pa pb = MkParam (liftA2 (,) (paramAsk pa) (paramAsk pb)) (\(a, b) -> paramWith pa a . paramWith pb b)
 
 liftParam :: (MonadTransTunnel t, Monad m) => Param m --> Param (t m)
 liftParam (MkParam a l) = MkParam (lift a) $ \aa -> hoist $ l aa

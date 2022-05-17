@@ -10,15 +10,16 @@ data Exn m e = MkExn
     , exnCatch :: forall a. m a -> (e -> m a) -> m a
     }
 
-voidExn :: Exn m Void
-voidExn = MkExn {exnThrow = absurd, exnCatch = \m _ -> m}
+instance Invariant (Exn m) where
+    invmap f g (MkExn t c) = MkExn (t . g) (\ma ema -> c ma $ ema . f)
 
-eitherExn :: Exn m e1 -> Exn m e2 -> Exn m (Either e1 e2)
-eitherExn exn1 exn2 =
-    MkExn
-        { exnThrow = either (exnThrow exn1) (exnThrow exn2)
-        , exnCatch = \m k -> exnCatch exn1 (exnCatch exn2 m (k . Right)) (k . Left)
-        }
+instance Summish (Exn m) where
+    pNone = MkExn {exnThrow = absurd, exnCatch = \m _ -> m}
+    exn1 <+++> exn2 =
+        MkExn
+            { exnThrow = either (exnThrow exn1) (exnThrow exn2)
+            , exnCatch = \m k -> exnCatch exn1 (exnCatch exn2 m (k . Right)) (k . Left)
+            }
 
 exnTry :: Monad m => Exn m e -> m a -> m (Result e a)
 exnTry exn ma = exnCatch exn (fmap SuccessResult ma) $ \e -> return $ FailureResult e
