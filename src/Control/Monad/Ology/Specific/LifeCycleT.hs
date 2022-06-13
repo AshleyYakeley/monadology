@@ -5,6 +5,8 @@ module Control.Monad.Ology.Specific.LifeCycleT
     , lifeCycleOnClose
     , forkLifeCycleT
     , getLifeState
+    , addLifeState
+    , modifyLifeState
     , runLifeCycleT
     , With
     , lifeCycleWith
@@ -116,12 +118,15 @@ instance MonadTransUnlift LifeCycleT where
             var <- liftIO $ newMVar mempty
             f var
 
-lifeCycleOnCloseIO :: MonadIO m => IO () -> LifeCycleT m ()
-lifeCycleOnCloseIO closer =
+addLifeState :: MonadIO m => LifeState -> LifeCycleT m ()
+addLifeState ls =
     MkLifeCycleT $ \var -> do
         dangerousMVarRun var $ do
             s <- get
-            put $ MkLifeState closer <> s
+            put $ ls <> s
+
+lifeCycleOnCloseIO :: MonadIO m => IO () -> LifeCycleT m ()
+lifeCycleOnCloseIO closer = addLifeState $ MkLifeState closer
 
 lifeCycleOnClose :: MonadAskUnliftIO m => m () -> LifeCycleT m ()
 lifeCycleOnClose closer = do
@@ -158,6 +163,15 @@ getLifeState (MkLifeCycleT f) = do
     t <- f var
     ls <- liftIO $ takeMVar var
     return (t, ls)
+
+modifyLifeState ::
+       forall m. MonadIO m
+    => (LifeState -> LifeState)
+    -> LifeCycleT m --> LifeCycleT m
+modifyLifeState ss la = do
+    (a, ls) <- lift $ getLifeState la
+    addLifeState $ ss ls
+    return a
 
 -- | Runs the given lifecycle, returning a closer.
 -- The closer is an idempotent action that will close the lifecycle only if it hasn't already been closed.
