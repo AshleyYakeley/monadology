@@ -78,3 +78,9 @@ instance MonadOuter outer => MonadTransUnlift (ComposeOuter outer) where
         MkComposeOuter $ do
             MkExtract extract <- getExtract
             return $ call $ extract . getComposeOuter
+
+monoHoist ::
+       forall (t :: TransKind) ma mb a b. (MonadTransUnlift t, MonadTunnelIOInner ma, MonadIO mb)
+    => (ma a -> mb b)
+    -> (t ma a -> t mb b)
+monoHoist f tma = liftWithUnlift $ \unlift -> f $ unlift tma

@@ -4,6 +4,7 @@ module Control.Monad.Ology.Specific.LifeCycleT
     , lifeCycleOnCloseIO
     , lifeCycleOnClose
     , forkLifeCycleT
+    , forkInLifeCycleT
     , getLifeState
     , addLifeState
     , modifyLifeState
@@ -153,6 +154,9 @@ forkLifeCycleT action = do
     var <- liftIO newEmptyMVar
     lifeCycleOnCloseIO $ takeMVar var
     lift $ liftIOWithUnlift $ \unlift -> forkIO $ finally (unlift action) $ putMVar var ()
+
+forkInLifeCycleT :: MonadUnliftIO m => LifeCycleT m () -> LifeCycleT m ThreadId
+forkInLifeCycleT action = liftWithUnlift $ \unlift -> unlift $ forkLifeCycleT $ unlift action
 
 getLifeState ::
        forall m a. MonadIO m
