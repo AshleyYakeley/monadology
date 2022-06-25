@@ -1,5 +1,6 @@
 module Control.Monad.Ology.Specific.LifeCycleT
     ( LifeState(..)
+    , closeLifeState
     , LifeCycleT(..)
     , lifeCycleOnCloseIO
     , lifeCycleOnClose
@@ -22,14 +23,20 @@ import Control.Monad.Ology.Specific.StateT
 import Import
 
 newtype LifeState = MkLifeState
-    { closeLifeState :: IO ()
+    { unLifeState :: Maybe (IO ()) -- special case for empty
     }
 
+closeLifeState :: LifeState -> IO ()
+closeLifeState (MkLifeState (Just c)) = c
+closeLifeState (MkLifeState Nothing) = return ()
+
 instance Semigroup LifeState where
-    MkLifeState p <> MkLifeState q = MkLifeState $ p >> q
+    MkLifeState Nothing <> q = q
+    p <> MkLifeState Nothing = p
+    MkLifeState (Just p) <> MkLifeState (Just q) = MkLifeState $ Just $ p >> q
 
 instance Monoid LifeState where
-    mempty = MkLifeState $ return ()
+    mempty = MkLifeState Nothing
 
 newtype LifeCycleT m a = MkLifeCycleT
     { unLifeCycleT :: MVar LifeState -> m a
@@ -127,7 +134,7 @@ addLifeState ls =
             put $ ls <> s
 
 lifeCycleOnCloseIO :: MonadIO m => IO () -> LifeCycleT m ()
-lifeCycleOnCloseIO closer = addLifeState $ MkLifeState closer
+lifeCycleOnCloseIO closer = addLifeState $ MkLifeState $ Just closer
 
 lifeCycleOnClose :: MonadAskUnliftIO m => m () -> LifeCycleT m ()
 lifeCycleOnClose closer = do
@@ -141,8 +148,8 @@ withLifeCycleT ::
 withLifeCycleT (MkLifeCycleT f) run = do
     var <- liftIO $ newMVar mempty
     finally (f var >>= run) $ do
-        MkLifeState closer <- liftIO $ takeMVar var
-        liftIO closer
+        ls <- liftIO $ takeMVar var
+        liftIO $ closeLifeState ls
 
 runLifeCycleT ::
        forall m. (MonadException m, MonadTunnelIO m)
@@ -185,14 +192,14 @@ lifeCycleGetCloser ::
     => LifeCycleT m a
     -> LifeCycleT m (a, IO ())
 lifeCycleGetCloser lc = do
-    (a, MkLifeState closer) <- lift $ getLifeState lc
+    (a, ls) <- lift $ getLifeState lc
     var <- liftIO $ newMVar ()
     let
         earlycloser :: IO ()
         earlycloser = do
             mu <- tryTakeMVar var
             case mu of
-                Just () -> closer
+                Just () -> closeLifeState ls
                 Nothing -> return ()
     lifeCycleOnCloseIO earlycloser
     return (a, earlycloser)
