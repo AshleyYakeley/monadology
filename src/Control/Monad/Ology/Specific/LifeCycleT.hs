@@ -147,9 +147,10 @@ withLifeCycleT ::
     -> With m a
 withLifeCycleT (MkLifeCycleT f) run = do
     var <- liftIO $ newMVar mempty
-    finally (f var >>= run) $ do
-        ls <- liftIO $ takeMVar var
-        liftIO $ closeLifeState ls
+    finally (f var >>= run) $
+        liftIO $ do
+            ls <- takeMVar var
+            closeLifeState ls
 
 runLifeCycleT ::
        forall m. (MonadException m, MonadTunnelIO m)
@@ -172,7 +173,12 @@ getLifeState ::
 getLifeState (MkLifeCycleT f) = do
     var <- liftIO $ newMVar mempty
     t <- f var
-    ls <- liftIO $ takeMVar var
+    let
+        ls =
+            MkLifeState $
+            Just $ do
+                ls0 <- takeMVar var
+                closeLifeState ls0
     return (t, ls)
 
 modifyLifeState ::
