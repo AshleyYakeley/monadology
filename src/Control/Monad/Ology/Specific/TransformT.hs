@@ -38,14 +38,17 @@ instance MonadIO m => MonadIO (TransformT m) where
 instance TransConstraint MonadIO TransformT where
     hasTransConstraint = Dict
 
-instance (Functor f, Semigroup a) => Semigroup (TransformT f a) where
+instance Semigroup a => Semigroup (TransformT f a) where
     (<>) = liftA2 (<>)
 
-instance (Functor f, Monoid a) => Monoid (TransformT f a) where
+instance Monoid a => Monoid (TransformT f a) where
     mempty = pure mempty
 
 mapTransformT :: (f --> f) -> TransformT f ()
 mapTransformT ff = MkTransformT $ \uf -> ff $ uf ()
+
+unmapTransformT :: TransformT f () -> f --> f
+unmapTransformT (MkTransformT uff) f = uff $ \() -> f
 
 execMapTransformT :: Monad f => f (TransformT f a) -> TransformT f a
 execMapTransformT ffa =
