@@ -44,6 +44,15 @@ instance Semigroup a => Semigroup (TransformT f a) where
 instance Monoid a => Monoid (TransformT f a) where
     mempty = pure mempty
 
+instance MonadFix m => MonadFix (TransformT m) where
+    mfix ama =
+        MkTransformT $ \amr ->
+            fmap snd $
+            mfix $ \(~(olda, _)) ->
+                runTransformT (ama olda) $ \newa -> do
+                    r <- amr newa
+                    return (newa, r)
+
 mapTransformT :: (f --> f) -> TransformT f ()
 mapTransformT ff = MkTransformT $ \uf -> ff $ uf ()
 
