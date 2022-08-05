@@ -46,15 +46,23 @@ instance Monoid a => Monoid (TransformT f a) where
 
 instance MonadFix m => MonadFix (TransformT m) where
     mfix ama =
-        MkTransformT $ \amr ->
-            fmap snd $
-            mfix $ \(~(olda, _)) ->
-                runTransformT (ama olda) $ \newa -> do
-                    r <- amr newa
-                    return (newa, r)
+        MkTransformT $ \amr -> do
+            rec
+                (~(olda, r')) <-
+                    runTransformT (ama olda) $ \newa -> do
+                        r <- amr newa
+                        return (newa, r)
+            return r'
 
 mapTransformT :: (f --> f) -> TransformT f ()
 mapTransformT ff = MkTransformT $ \uf -> ff $ uf ()
+
+postTransformT :: Monad m => m () -> TransformT m ()
+postTransformT mu =
+    mapTransformT $ \mr -> do
+        r <- mr
+        mu
+        return r
 
 unmapTransformT :: TransformT f () -> f --> f
 unmapTransformT (MkTransformT uff) f = uff $ \() -> f
