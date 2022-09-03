@@ -13,7 +13,7 @@ data Exn m e = MkExn
 instance Invariant (Exn m) where
     invmap f g (MkExn t c) = MkExn (t . g) (\ma ema -> c ma $ ema . f)
 
-instance Summish (Exn m) where
+instance Summable (Exn m) where
     pNone = MkExn {exnThrow = absurd, exnCatch = \m _ -> m}
     exn1 <+++> exn2 =
         MkExn

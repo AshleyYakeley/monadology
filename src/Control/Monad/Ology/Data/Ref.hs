@@ -19,7 +19,7 @@ data Ref m a = MkRef
 instance Functor m => Invariant (Ref m) where
     invmap f g (MkRef gt pt) = MkRef (fmap f gt) (pt . g)
 
-instance Applicative m => Productish (Ref m) where
+instance Applicative m => Productable (Ref m) where
     pUnit = MkRef (pure ()) (\_ -> pure ())
     ra <***> rb = MkRef (liftA2 (,) (refGet ra) (refGet rb)) $ \(a, b) -> refPut ra a *> refPut rb b
 
