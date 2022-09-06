@@ -38,7 +38,11 @@ instance (MonadTransUnlift t, MonadCoroutine m, MonadTunnelIOInner m, Monad (t m
             (fmap $ fmap $ fmap $ fmap $ hoist lift) $
             resumeCoroutine $ coroutineSuspend $ \pmq -> unlift $ call $ \p -> lift $ pmq p
 
-type With m t = forall (r :: Type). (t -> m r) -> m r
+-- | A type synoynm for a common pattern for closing opened resources, e.g.
+-- 'System.IO.withFile',
+-- 'System.IO.withBinaryFile',
+-- etc.
+type With (m :: Type -> Type) (t :: Type) = forall (r :: Type). (t -> m r) -> m r
 
 unpickWith ::
        forall m a. MonadCoroutine m

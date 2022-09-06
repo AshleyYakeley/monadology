@@ -6,10 +6,15 @@ import Control.Monad.Ology.General.Exception.Class
 import Control.Monad.Ology.Specific.Result
 import Import
 
--- | Instances of this type are isomorphic to @Either P (Q,a)@ for some types @P@ and @Q@ (with @Monoid Q@).
+-- | Monads that can compose as the inner monad with any outer monad to make a monad.
+-- See 'Control.Monad.Ology.Specific.ComposeInner.ComposeInner'.
+-- Instances of this type are isomorphic to @Either P (Q,a)@ for some types @P@ and @Q@ (with @Monoid Q@).
+--
 -- Must satisfy:
+--
 -- * @retrieveInner (fmap f w) = fmap f (retrieveInner w)@
--- * @case (retrieveInner w) of {Left w' -> fmap absurd w'; Right a -> fmap (\_ -> a) w;} = w@
+--
+-- * @case retrieveInner w of {Left w' -> fmap absurd w'; Right a -> fmap (\_ -> a) w;} = w@
 class (Traversable m, MonadException m) => MonadInner m where
     retrieveInner :: forall a. m a -> Result (Exc m) a
 

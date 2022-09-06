@@ -1,5 +1,5 @@
-module LifeCycle
-    ( testLifeCycle
+module Lifecycle
+    ( testLifecycle
     ) where
 
 import Control.Monad.Ology
@@ -8,29 +8,29 @@ import Test.Tasty
 import Test.Tasty.HUnit
 import Useful
 
-testLifeCycleRun :: TestTree
-testLifeCycleRun =
+testLifecycleRun :: TestTree
+testLifecycleRun =
     testCase "run" $
     compareTest "ACDB" $ \appendStr -> do
         let
-            lc :: LifeCycle ()
+            lc :: Lifecycle ()
             lc = do
                 liftIO $ appendStr "A"
-                lifeCycleOnClose $ appendStr "B"
+                lifecycleOnClose $ appendStr "B"
                 liftIO $ appendStr "C"
-                lifeCycleOnClose $ appendStr "D"
-        runLifeCycleT lc
+                lifecycleOnClose $ appendStr "D"
+        runLifecycle lc
 
-testLifeCycleWith :: TestTree
-testLifeCycleWith =
+testLifecycleWith :: TestTree
+testLifecycleWith =
     testCase "with" $
     compareTest "ABECFD" $ \appendStr -> do
         let
-            lc :: LifeCycle ()
+            lc :: Lifecycle ()
             lc = do
                 liftIO $ appendStr "A"
                 s <-
-                    lifeCycleWith $ \call -> do
+                    lifecycleWith $ \call -> do
                         appendStr "B"
                         v <- call "C"
                         appendStr "D"
@@ -38,7 +38,7 @@ testLifeCycleWith =
                 liftIO $ appendStr "E"
                 liftIO $ appendStr s
                 liftIO $ appendStr "F"
-        runLifeCycleT lc
+        runLifecycle lc
 
-testLifeCycle :: TestTree
-testLifeCycle = testGroup "lifecycle" [testLifeCycleRun, testLifeCycleWith]
+testLifecycle :: TestTree
+testLifecycle = testGroup "lifecycle" [testLifecycleRun, testLifecycleWith]

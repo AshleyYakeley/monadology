@@ -7,7 +7,10 @@ newtype Extract m = MkExtract
     { runExtract :: forall a. m a -> a
     }
 
--- | Instances of this type are isomorphic to @P -> a@ for some type @P@.
+-- | Monads that can compose as the outer monad with any inner monad to make a monad.
+-- See 'Control.Monad.Ology.Specific.ComposeOuter.ComposeOuter'.
+-- Instances of this type are isomorphic to @P -> a@ for some type @P@.
+--
 -- Must satisfy @fmap (\ex -> runExtract ex ma) getExtract = ma@.
 class Monad m => MonadOuter m where
     getExtract :: m (Extract m)

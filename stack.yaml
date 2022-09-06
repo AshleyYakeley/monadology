@@ -5,4 +5,4 @@ ghc-options:
 
 extra-deps:
 - countable-1.2
-- witness-0.6
+- witness-0.6.1
