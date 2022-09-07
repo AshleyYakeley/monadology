@@ -5,6 +5,7 @@ import Control.Monad.Ology.General.Trans.Trans
 import Control.Monad.Ology.General.Trans.Tunnel
 import Control.Monad.Ology.General.Trans.Unlift
 import Control.Monad.Ology.Specific.CoroutineT
+import Control.Monad.Ology.Specific.StepT
 import Import
 
 class Monad m => MonadCoroutine m where
@@ -13,7 +14,7 @@ class Monad m => MonadCoroutine m where
 instance MonadCoroutine IO where
     coroutineSuspend :: ((p -> IO q) -> IO r) -> CoroutineT p q IO r
     coroutineSuspend action =
-        MkCoroutineT $ do
+        MkStepT $ do
             invar <- newEmptyMVar
             outvar <- newEmptyMVar
             _ <-
@@ -21,22 +22,21 @@ instance MonadCoroutine IO where
                     r <-
                         action $ \p -> do
                             putMVar outvar $
-                                Right
-                                    ( p
-                                    , \q ->
-                                          MkCoroutineT $ do
-                                              putMVar invar q
-                                              takeMVar outvar)
+                                Right $
+                                MkTurn p $ \q ->
+                                    MkStepT $ do
+                                        putMVar invar q
+                                        takeMVar outvar
                             takeMVar invar
                     putMVar outvar $ Left r
             takeMVar outvar
 
 instance (MonadTransUnlift t, MonadCoroutine m, MonadTunnelIOInner m, Monad (t m)) => MonadCoroutine (t m) where
     coroutineSuspend call =
-        MkCoroutineT $
+        MkStepT $
         liftWithUnlift $ \unlift ->
-            (fmap $ fmap $ fmap $ fmap $ hoist lift) $
-            resumeCoroutine $ coroutineSuspend $ \pmq -> unlift $ call $ \p -> lift $ pmq p
+            (fmap $ fmap $ fmap $ hoist lift) $
+            singleStep $ coroutineSuspend $ \pmq -> unlift $ call $ \p -> lift $ pmq p
 
 -- | A type synoynm for a common pattern for closing opened resources, e.g.
 -- 'System.IO.withFile',
@@ -49,7 +49,7 @@ unpickWith ::
     => With m a
     -> m (a, m ())
 unpickWith w = do
-    etp <- resumeCoroutine $ coroutineSuspend w
+    etp <- singleStep $ coroutineSuspend w
     case etp of
         Left a -> return (a, return ())
-        Right (a, f) -> return (a, fmap (\_ -> ()) $ runCoroutine $ f a)
+        Right (MkTurn a f) -> return (a, fmap (\_ -> ()) $ runCoroutine $ f a)

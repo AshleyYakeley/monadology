@@ -104,6 +104,7 @@ library:
     - Control.Monad.Ology.Specific.StackT
     - Control.Monad.Ology.Specific.TransformT
     - Control.Monad.Ology.Specific.ResultT
+    - Control.Monad.Ology.Specific.StepT
     - Control.Monad.Ology.Specific.CoroutineT
     - Control.Monad.Ology.Specific.LifecycleT
     - Control.Monad.Ology.Data.Exn
