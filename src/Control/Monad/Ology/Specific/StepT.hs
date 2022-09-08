@@ -6,6 +6,7 @@ import Control.Monad.Ology.General.Trans.Hoist
 import Control.Monad.Ology.General.Trans.Trans
 import Import
 
+-- | A monad that can be run step-by-step until the result.
 newtype StepT f m a = MkStepT
     { singleStep :: m (Either a (f (StepT f m a)))
     }
@@ -47,6 +48,7 @@ instance Functor f => MonadTrans (StepT f) where
 instance Functor f => MonadTransHoist (StepT f) where
     hoist f (MkStepT ma) = MkStepT $ (fmap $ fmap $ fmap $ hoist f) $ f ma
 
+-- | Run all the steps until done.
 runSteps :: Monad m => (forall x. f x -> x) -> StepT f m a -> m a
 runSteps fxx step = do
     eap <- singleStep step
@@ -54,5 +56,6 @@ runSteps fxx step = do
         Left a -> return a
         Right sc -> runSteps fxx $ fxx sc
 
+-- | A pending step for this result.
 pendingStep :: (Functor f, Monad m) => f a -> StepT f m a
 pendingStep fa = MkStepT $ pure $ Right $ fmap pure fa
