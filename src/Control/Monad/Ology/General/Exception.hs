@@ -12,12 +12,15 @@ import Control.Monad.Ology.General.Trans.Hoist
 import Control.Monad.Ology.General.Trans.Tunnel
 import Import
 
+-- | Run with asynchronous exceptions masked, passing an unmask function.
 mask ::
        forall m b. MonadTunnelIO m
     => ((forall a. m a -> m a) -> m b)
     -> m b
 mask call = tunnelIO $ \unlift -> CE.mask $ \restore -> unlift $ call $ hoistIO restore
 
+-- | Bracket an operation with before and after operations.
+-- The whole thing is masked, with the main operation unmasked.
 bracket ::
        forall m a b. (MonadException m, MonadTunnelIO m)
     => m a
@@ -27,10 +30,11 @@ bracket ::
 bracket before after thing =
     mask $ \restore -> do
         a <- before
-        r <- onException (restore (thing a)) (after a)
-        _ <- after a
-        return r
+        b <- onException (restore (thing a)) (after a)
+        after a
+        return b
 
+-- | Variant of 'bracket'.
 finally ::
        forall m a. (MonadException m, MonadTunnelIO m)
     => m a
@@ -38,6 +42,7 @@ finally ::
     -> m a
 finally ma handler = bracket (return ()) (const handler) (const ma)
 
+-- | Variant of 'bracket'.
 bracket_ ::
        forall m. (MonadException m, MonadTunnelIO m)
     => m ()

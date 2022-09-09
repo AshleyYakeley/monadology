@@ -4,7 +4,9 @@ import qualified Control.Exception as CE
 import Control.Monad.Ology.Specific.Result
 import Import
 
+-- | Pretty much every monad can be made an instance of this class.
 class Monad m => MonadException m where
+    -- | The type of /all/ exceptions of this monad.
     type Exc m :: Type
     throwExc :: Exc m -> m a
     catchExc :: m a -> (Exc m -> m a) -> m a
@@ -53,6 +55,7 @@ instance MonadException IO where
     throwExc = CE.throwIO
     catchExc = CE.catch
 
+-- | Catch all exceptions, optionally returning or re-throwing.
 catchSomeExc ::
        forall m a. MonadException m
     => m a
@@ -67,12 +70,15 @@ fromResultExc ::
 fromResultExc (SuccessResult a) = return a
 fromResultExc (FailureResult e) = throwExc e
 
+-- | Catch all exceptions as a 'Result'.
 tryExc ::
        forall m a. MonadException m
     => m a
     -> m (Result (Exc m) a)
 tryExc ma = catchExc (fmap SuccessResult ma) $ \e -> return $ FailureResult e
 
+-- | Run the handler on exception.
+-- Does not mask asynchronous exceptions on the handler.
 onException ::
        forall m a. MonadException m
     => m a
@@ -80,5 +86,7 @@ onException ::
     -> m a
 onException ma handler = catchExc ma $ \ex -> handler >> throwExc ex
 
+-- | This catches certain "bottom values".
+-- Of course, since non-termination is bottom, this cannot catch all bottoms.
 catchPureError :: a -> IO (Maybe CE.SomeException)
 catchPureError a = catchExc (CE.evaluate a >> return Nothing) $ \e -> return $ Just e
