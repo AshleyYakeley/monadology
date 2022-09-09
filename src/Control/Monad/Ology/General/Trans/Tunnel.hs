@@ -9,7 +9,7 @@ import Control.Monad.Ology.Specific.ComposeInner
 import Import
 
 type MonadTransTunnel :: TransKind -> Constraint
-class (MonadTransHoist t, Functor (Tunnel t)) => MonadTransTunnel t where
+class (MonadTransHoist t, MonadInner (Tunnel t)) => MonadTransTunnel t where
     type Tunnel t :: Type -> Type
     tunnel ::
            forall m r. Monad m
@@ -54,7 +54,7 @@ instance MonadInner inner => MonadTransTunnel (ComposeInner inner) where
     type Tunnel (ComposeInner inner) = inner
     tunnel call = MkComposeInner $ call getComposeInner
 
-class (MonadHoistIO m, Functor (TunnelIO m)) => MonadTunnelIO m where
+class (MonadHoistIO m, MonadInner (TunnelIO m)) => MonadTunnelIO m where
     type TunnelIO m :: Type -> Type
     tunnelIO :: forall r. ((forall a. m a -> IO (TunnelIO m a)) -> IO (TunnelIO m r)) -> m r
 
