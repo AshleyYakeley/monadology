@@ -5,30 +5,30 @@ import Control.Monad.Ology.General
 import Control.Monad.Ology.Specific.StateT
 import Import
 
-type ReaderStateT f m = StateT (WMFunction f m) m
+type ReaderStateT f m = StateT (Raised f m) m
 
 evalReaderStateT :: Monad m => ReaderStateT f m a -> (f --> m) -> m a
-evalReaderStateT rsa fm = evalStateT rsa (MkWMFunction fm)
+evalReaderStateT rsa fm = evalStateT rsa (MkRaised fm)
 
-liftRS :: (Monad f, Monad m) => f --> ReaderStateT f m
-liftRS fa = do
-    MkWMFunction fm <- get
+readerStateLift :: (Monad f, Monad m) => f --> ReaderStateT f m
+readerStateLift fa = do
+    MkRaised fm <- get
     a <- lift $ fm fa
-    put $ MkWMFunction $ \c -> fm $ fa >> c
+    put $ MkRaised $ \c -> fm $ fa >> c
     return a
 
-updateRS :: Monad m => (f --> f) -> ReaderStateT f m ()
-updateRS ff = modify (\fm -> fm . MkWMFunction ff)
+readerStateUpdate :: Monad m => (f --> f) -> ReaderStateT f m ()
+readerStateUpdate ff = modify (\fm -> fm . MkRaised ff)
 
-rsParamRef ::
+readerParamRef ::
        forall f m a. Monad m
     => Param f a
     -> Ref (ReaderStateT f m) a
-rsParamRef param = let
+readerParamRef param = let
     refGet :: ReaderStateT f m a
     refGet = do
-        MkWMFunction ff <- get
+        MkRaised ff <- get
         lift $ ff $ paramAsk param
     refPut :: a -> ReaderStateT f m ()
-    refPut a = updateRS $ paramWith param a
+    refPut a = readerStateUpdate $ paramWith param a
     in MkRef {..}

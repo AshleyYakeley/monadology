@@ -7,32 +7,32 @@ import Import
 -- type (-->) :: forall k. (k -> Type) -> (k -> Type) -> Type
 type p --> q = forall a. p a -> q a
 
-type WMFunction :: forall k. (k -> Type) -> (k -> Type) -> Type
-newtype WMFunction p q = MkWMFunction
-    { runWMFunction :: p --> q
+type Raised :: forall k. (k -> Type) -> (k -> Type) -> Type
+newtype Raised p q = MkRaised
+    { runRaised :: p --> q
     }
 
-wLift :: (MonadTrans t, Monad m) => WMFunction m (t m)
-wLift = MkWMFunction lift
+wLift :: (MonadTrans t, Monad m) => Raised m (t m)
+wLift = MkRaised lift
 
-wLiftIO :: MonadIO m => WMFunction IO m
-wLiftIO = MkWMFunction liftIO
+wLiftIO :: MonadIO m => Raised IO m
+wLiftIO = MkRaised liftIO
 
-instance Category WMFunction where
-    id = MkWMFunction id
-    (MkWMFunction bc) . (MkWMFunction ab) = MkWMFunction $ bc . ab
+instance Category Raised where
+    id = MkRaised id
+    (MkRaised bc) . (MkRaised ab) = MkRaised $ bc . ab
 
 -- type (-/->) :: forall k. (k -> Type) -> (k -> Type) -> Type
 type ma -/-> mb = forall r. ((mb --> ma) -> ma r) -> mb r
 
-mBackFunctionToFunction :: (ma -/-> mb) -> ma --> mb
-mBackFunctionToFunction mbf ma = mbf $ \_ -> ma
+mBackraisedToRaised :: (ma -/-> mb) -> ma --> mb
+mBackraisedToRaised mbf ma = mbf $ \_ -> ma
 
-type WMBackFunction :: forall k. (k -> Type) -> (k -> Type) -> Type
-newtype WMBackFunction p q = MkWMBackFunction
-    { runWMBackFunction :: p -/-> q
+type Backraised :: forall k. (k -> Type) -> (k -> Type) -> Type
+newtype Backraised p q = MkBackraised
+    { runBackraised :: p -/-> q
     }
 
-instance Category WMBackFunction where
-    id = MkWMBackFunction $ \f -> f id
-    (MkWMBackFunction bc) . (MkWMBackFunction ab) = MkWMBackFunction $ \f -> bc $ \mcmb -> ab $ \mbma -> f $ mbma . mcmb
+instance Category Backraised where
+    id = MkBackraised $ \f -> f id
+    (MkBackraised bc) . (MkBackraised ab) = MkBackraised $ \f -> bc $ \mcmb -> ab $ \mbma -> f $ mbma . mcmb

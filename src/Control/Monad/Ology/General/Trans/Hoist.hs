@@ -13,8 +13,8 @@ class (MonadTrans t, TransConstraint Monad t) => MonadTransHoist t where
         => (m1 --> m2)
         -> t m1 --> t m2
 
-hoistTransform :: (MonadTransHoist t, Monad m1, Monad m2) => (m1 --> m2) -> WMFunction (t m2) --> WMFunction (t m1)
-hoistTransform ff (MkWMFunction r2) = MkWMFunction $ \m1a -> r2 $ hoist ff m1a
+hoistTransform :: (MonadTransHoist t, Monad m1, Monad m2) => (m1 --> m2) -> Raised (t m2) --> Raised (t m1)
+hoistTransform ff (MkRaised r2) = MkRaised $ \m1a -> r2 $ hoist ff m1a
 
 class MonadIO m => MonadHoistIO m where
     hoistIO :: (IO --> IO) -> m --> m

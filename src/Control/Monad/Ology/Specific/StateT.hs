@@ -99,5 +99,5 @@ liftWithMVarStateT vma =
         finalstate <- liftIO $ takeMVar var
         return (r, finalstate)
 
-mVarWIORun :: MVar s -> WMFunction (StateT s IO) IO
-mVarWIORun var = MkWMFunction $ mVarRun var
+mVarWIORun :: MVar s -> Raised (StateT s IO) IO
+mVarWIORun var = MkRaised $ mVarRun var

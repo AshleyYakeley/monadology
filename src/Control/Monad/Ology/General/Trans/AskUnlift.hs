@@ -22,18 +22,18 @@ class MonadTransUnlift t => MonadTransAskUnlift t where
 
 -- | A monad that has no effects over IO (such as state change or output)
 class MonadUnliftIO m => MonadAskUnliftIO m where
-    askUnliftIO :: m (WMFunction m IO)
-    askUnliftIO = tunnelIO $ \unlift -> pure $ pure $ MkWMFunction $ \ma -> fmap mToValue $ unlift ma
+    askUnliftIO :: m (Raised m IO)
+    askUnliftIO = tunnelIO $ \unlift -> pure $ pure $ MkRaised $ \ma -> fmap mToValue $ unlift ma
 
 instance MonadAskUnliftIO IO where
-    askUnliftIO = return $ MkWMFunction id
+    askUnliftIO = return $ MkRaised id
 
 instance (MonadTransAskUnlift t, MonadAskUnliftIO m, MonadFail (t m), MonadIO (t m), MonadFix (t m)) =>
              MonadAskUnliftIO (t m) where
     askUnliftIO = do
         MkWUnlift unlift <- askUnlift
-        MkWMFunction unliftIO <- lift askUnliftIO
-        return $ MkWMFunction $ unliftIO . unlift
+        MkRaised unliftIO <- lift askUnliftIO
+        return $ MkRaised $ unliftIO . unlift
 
 instance MonadTransAskUnlift t => TransConstraint MonadAskUnliftIO t where
     hasTransConstraint =

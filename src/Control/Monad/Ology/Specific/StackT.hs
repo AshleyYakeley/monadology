@@ -127,7 +127,7 @@ instance (IsStack (TransConstraint Monad) tt, IsStack MonadTrans tt) => MonadTra
                forall tt'.
                ListType (Compose Dict (TransConstraint Monad)) tt'
             -> ListType (Compose Dict MonadTrans) tt'
-            -> (WMFunction m (ApplyStack tt' m), Dict (Monad (ApplyStack tt' m)))
+            -> (Raised m (ApplyStack tt' m), Dict (Monad (ApplyStack tt' m)))
         build NilListType NilListType = (id, Dict)
         build (ConsListType (Compose Dict) wa) (ConsListType (Compose Dict) wb) =
             case build wa wb of
@@ -136,7 +136,7 @@ instance (IsStack (TransConstraint Monad) tt, IsStack MonadTrans tt) => MonadTra
                wa = representative @_ @(ListType (Compose Dict (TransConstraint Monad))) @tt
                wb = representative @_ @(ListType (Compose Dict MonadTrans)) @tt
                in case build wa wb of
-                      (wmf, _) -> \ma -> MkStackT $ runWMFunction wmf ma
+                      (wmf, _) -> \ma -> MkStackT $ runRaised wmf ma
 
 stackLift ::
        forall tt m. (IsStack (TransConstraint Monad) tt, IsStack MonadTrans tt, Monad m)
@@ -321,19 +321,19 @@ combineIOFunctions ::
     => (ApplyStack tt IO --> IO)
     -> (m --> IO)
     -> ApplyStack tt m --> IO
-combineIOFunctions fa fb = runWMFunction $ MkWMFunction fa . MkWMFunction (stackHoist @tt fb)
+combineIOFunctions fa fb = runRaised $ MkRaised fa . MkRaised (stackHoist @tt fb)
 
-stackLiftWMBackFunction ::
+stackLiftBackraised ::
        forall tt ma mb. (MonadTransStackUnlift tt, Monad ma, Monad mb)
-    => WMBackFunction ma mb
-    -> WMBackFunction (ApplyStack tt ma) (ApplyStack tt mb)
-stackLiftWMBackFunction mab = coerce $ backHoistW @(StackT tt) mab
+    => Backraised ma mb
+    -> Backraised (ApplyStack tt ma) (ApplyStack tt mb)
+stackLiftBackraised mab = coerce $ backHoistW @(StackT tt) mab
 
 stackLiftMBackFunction ::
        forall tt ma mb. (MonadTransStackUnlift tt, Monad ma, Monad mb)
     => (ma -/-> mb)
     -> ApplyStack tt ma -/-> ApplyStack tt mb
-stackLiftMBackFunction f = runWMBackFunction $ stackLiftWMBackFunction @tt $ MkWMBackFunction f
+stackLiftMBackFunction f = runBackraised $ stackLiftBackraised @tt $ MkBackraised f
 
 type MonadTransStackUnlift tt
      = ( IsStack (TransConstraint MonadFail) tt
@@ -390,7 +390,7 @@ concatMonadTransStackUnliftDict =
 stackLiftWithUnlift ::
        forall tt m. (MonadTransStackUnlift tt, MonadTunnelIOInner m)
     => m -/-> ApplyStack tt m
-stackLiftWithUnlift = runWMBackFunction $ coerce $ liftWithUnliftW @(StackT tt) @m
+stackLiftWithUnlift = runBackraised $ coerce $ liftWithUnliftW @(StackT tt) @m
 
 concatMonadTransStackUnliftAllDict ::
        forall tt1 tt2. (MonadTransStackUnlift tt1, MonadTransStackUnlift tt2)

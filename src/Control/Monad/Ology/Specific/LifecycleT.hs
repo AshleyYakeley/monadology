@@ -143,7 +143,7 @@ lifecycleOnCloseIO closer = addLifeState $ MkLifeState $ Just closer
 -- | Add a closing action.
 lifecycleOnClose :: MonadAskUnliftIO m => m () -> LifecycleT m ()
 lifecycleOnClose closer = do
-    MkWMFunction unlift <- lift askUnliftIO
+    MkRaised unlift <- lift askUnliftIO
     lifecycleOnCloseIO $ unlift closer
 
 -- | Convert a lifecycle to a function that uses the \"with\" pattern.

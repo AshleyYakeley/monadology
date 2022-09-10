@@ -25,8 +25,8 @@ tunnelHoist mma sm1 = tunnel $ \tun -> mma $ tun sm1
 backHoist :: (MonadTransTunnel t, Monad ma, Monad mb) => (ma -/-> mb) -> t ma -/-> t mb
 backHoist wt tm = tunnel $ \unlift -> wt $ \tba -> unlift $ tm $ hoist tba
 
-backHoistW :: (MonadTransTunnel t, Monad ma, Monad mb) => WMBackFunction ma mb -> WMBackFunction (t ma) (t mb)
-backHoistW (MkWMBackFunction f) = MkWMBackFunction $ backHoist f
+backHoistW :: (MonadTransTunnel t, Monad ma, Monad mb) => Backraised ma mb -> Backraised (t ma) (t mb)
+backHoistW (MkBackraised f) = MkBackraised $ backHoist f
 
 -- | Swap two transformers in a transformer stack
 commuteTWith ::
@@ -87,5 +87,5 @@ newtype WUnlift c t = MkWUnlift
     { runWUnlift :: Unlift c t
     }
 
-wUnliftAllWMFunction :: c m => WUnlift c t -> WMFunction (t m) m
-wUnliftAllWMFunction (MkWUnlift unlift) = MkWMFunction unlift
+wUnliftAllRaised :: c m => WUnlift c t -> Raised (t m) m
+wUnliftAllRaised (MkWUnlift unlift) = MkRaised unlift

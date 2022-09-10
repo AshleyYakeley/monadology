@@ -17,7 +17,7 @@ class ( MonadTransTunnel t
       , TransConstraint Monad t
       , MonadExtract (Tunnel t)
       ) => MonadTransUnlift t where
-    -- | lift with a 'WMFunction' that accounts for the transformer's effects (using MVars where necessary)
+    -- | lift with a 'Raised' that accounts for the transformer's effects (using MVars where necessary)
     liftWithUnlift ::
            forall m r. MonadIO m
         => ((forall m'. MonadTunnelIOInner m' => t m' --> m') -> m r)
@@ -44,8 +44,8 @@ discardingWRunner (MkWUnlift u) = MkWUnlift $ discardingRunner u
 
 liftWithUnliftW ::
        forall t m. (MonadTransUnlift t, MonadTunnelIOInner m)
-    => WMBackFunction m (t m)
-liftWithUnliftW = MkWMBackFunction $ \call -> liftWithUnlift $ \unlift -> call unlift
+    => Backraised m (t m)
+liftWithUnliftW = MkBackraised $ \call -> liftWithUnlift $ \unlift -> call unlift
 
 composeUnliftAllFunction :: (MonadTransUnlift t, MonadUnliftIO m) => Unlift Functor t -> (m --> n) -> (t m --> n)
 composeUnliftAllFunction rt rm tma = rm $ rt tma
@@ -57,11 +57,11 @@ composeUnliftAllFunctionCommute rt rm tma = rt $ hoist rm tma
 class (MonadFail m, MonadIO m, MonadFix m, MonadTunnelIO m, MonadExtract (TunnelIO m)) => MonadUnliftIO m where
     -- | lift with an unlift that accounts for all transformer effects
     liftIOWithUnlift :: IO -/-> m
-    getDiscardingIOUnlift :: m (WMFunction m IO)
-    getDiscardingIOUnlift = tunnelIO $ \unlift -> pure $ pure $ MkWMFunction $ \mr -> fmap mToValue $ unlift mr
+    getDiscardingIOUnlift :: m (Raised m IO)
+    getDiscardingIOUnlift = tunnelIO $ \unlift -> pure $ pure $ MkRaised $ \mr -> fmap mToValue $ unlift mr
 
-ioWMBackFunction :: MonadUnliftIO m => WMBackFunction IO m
-ioWMBackFunction = MkWMBackFunction liftIOWithUnlift
+ioBackraised :: MonadUnliftIO m => Backraised IO m
+ioBackraised = MkBackraised liftIOWithUnlift
 
 instance MonadUnliftIO IO where
     liftIOWithUnlift call = call id
