@@ -4,6 +4,7 @@ import Control.Monad.Ology.General
 import Control.Monad.Ology.Specific.WriterT
 import Import
 
+-- | A product of a monad (as in 'WriterT').
 data Prod m a = MkProd
     { prodTell :: a -> m ()
     , prodListen :: forall r. m r -> m (r, a)

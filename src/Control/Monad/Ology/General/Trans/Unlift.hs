@@ -17,51 +17,46 @@ class ( MonadTransTunnel t
       , TransConstraint Monad t
       , MonadExtract (Tunnel t)
       ) => MonadTransUnlift t where
-    -- | lift with a 'Raised' that accounts for the transformer's effects (using MVars where necessary)
+    -- | Lift with an unlifting function that accounts for the transformer's effects (using MVars where necessary).
     liftWithUnlift ::
            forall m r. MonadIO m
-        => ((forall m'. MonadTunnelIOInner m' => t m' --> m') -> m r)
+        => (Unlift MonadTunnelIOInner t -> m r)
         -> t m r
-    -- | return a 'WUnlift' that discards the transformer's effects (such as state change or output)
+    -- | Return an unlifting function that discards the transformer's effects (such as state change or output).
     getDiscardingUnlift ::
            forall m. Monad m
         => t m (WUnlift MonadTunnelIOInner t)
     getDiscardingUnlift = tunnel $ \unlift -> pure $ pure $ MkWUnlift $ \tma -> fmap mToValue $ unlift tma
 
-discardingRunner ::
+toDiscardingUnlift ::
        forall t. MonadTransUnlift t
     => Unlift MonadUnliftIO t
     -> Unlift MonadUnliftIO t
-discardingRunner run tmr = do
+toDiscardingUnlift run tmr = do
     MkWUnlift du <- run getDiscardingUnlift
     du tmr
 
-discardingWRunner ::
-       forall t. MonadTransUnlift t
-    => WUnlift MonadUnliftIO t
-    -> WUnlift MonadUnliftIO t
-discardingWRunner (MkWUnlift u) = MkWUnlift $ discardingRunner u
-
-liftWithUnliftW ::
+wLiftWithUnlift ::
        forall t m. (MonadTransUnlift t, MonadTunnelIOInner m)
-    => Backraised m (t m)
-liftWithUnliftW = MkBackraised $ \call -> liftWithUnlift $ \unlift -> call unlift
+    => WBackraised m (t m)
+wLiftWithUnlift = MkWBackraised $ \call -> liftWithUnlift $ \unlift -> call unlift
 
-composeUnliftAllFunction :: (MonadTransUnlift t, MonadUnliftIO m) => Unlift Functor t -> (m --> n) -> (t m --> n)
-composeUnliftAllFunction rt rm tma = rm $ rt tma
+composeUnliftRaised :: (MonadTransUnlift t, MonadUnliftIO m) => Unlift Functor t -> (m --> n) -> (t m --> n)
+composeUnliftRaised rt rm tma = rm $ rt tma
 
-composeUnliftAllFunctionCommute ::
+composeUnliftRaisedCommute ::
        (MonadTransUnlift t, MonadUnliftIO m, MonadUnliftIO n) => Unlift Functor t -> (m --> n) -> (t m --> n)
-composeUnliftAllFunctionCommute rt rm tma = rt $ hoist rm tma
+composeUnliftRaisedCommute rt rm tma = rt $ hoist rm tma
 
 class (MonadFail m, MonadIO m, MonadFix m, MonadTunnelIO m, MonadExtract (TunnelIO m)) => MonadUnliftIO m where
-    -- | lift with an unlift that accounts for all transformer effects
+    -- | Lift with an unlifting function that accounts for the effects over 'IO'.
     liftIOWithUnlift :: IO -/-> m
-    getDiscardingIOUnlift :: m (Raised m IO)
-    getDiscardingIOUnlift = tunnelIO $ \unlift -> pure $ pure $ MkRaised $ \mr -> fmap mToValue $ unlift mr
+    -- | Return an unlifting function that discards the effects over 'IO'.
+    getDiscardingIOUnlift :: m (WRaised m IO)
+    getDiscardingIOUnlift = tunnelIO $ \unlift -> pure $ pure $ MkWRaised $ \mr -> fmap mToValue $ unlift mr
 
-ioBackraised :: MonadUnliftIO m => Backraised IO m
-ioBackraised = MkBackraised liftIOWithUnlift
+wLiftIOWithUnlift :: MonadUnliftIO m => WBackraised IO m
+wLiftIOWithUnlift = MkWBackraised liftIOWithUnlift
 
 instance MonadUnliftIO IO where
     liftIOWithUnlift call = call id
@@ -76,8 +71,8 @@ instance MonadTransUnlift t => TransConstraint MonadUnliftIO t where
 instance MonadOuter outer => MonadTransUnlift (ComposeOuter outer) where
     liftWithUnlift call =
         MkComposeOuter $ do
-            MkExtract extract <- getExtract
-            return $ call $ extract . getComposeOuter
+            MkWExtract extract <- getExtract
+            return $ call $ extract . unComposeOuter
 
 monoHoist ::
        forall (t :: TransKind) ma mb a b. (MonadTransUnlift t, MonadTunnelIOInner ma, MonadIO mb)

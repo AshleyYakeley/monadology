@@ -6,6 +6,7 @@ import Control.Monad.Ology.General.Trans.Constraint
 import Control.Monad.Ology.General.Trans.Trans
 import Import
 
+-- | Monad transformers for which monads can be hoisted.
 type MonadTransHoist :: TransKind -> Constraint
 class (MonadTrans t, TransConstraint Monad t) => MonadTransHoist t where
     hoist ::
@@ -13,8 +14,8 @@ class (MonadTrans t, TransConstraint Monad t) => MonadTransHoist t where
         => (m1 --> m2)
         -> t m1 --> t m2
 
-hoistTransform :: (MonadTransHoist t, Monad m1, Monad m2) => (m1 --> m2) -> Raised (t m2) --> Raised (t m1)
-hoistTransform ff (MkRaised r2) = MkRaised $ \m1a -> r2 $ hoist ff m1a
+hoistTransform :: (MonadTransHoist t, Monad m1, Monad m2) => (m1 --> m2) -> WRaised (t m2) --> WRaised (t m1)
+hoistTransform ff (MkWRaised r2) = MkWRaised $ \m1a -> r2 $ hoist ff m1a
 
 class MonadIO m => MonadHoistIO m where
     hoistIO :: (IO --> IO) -> m --> m

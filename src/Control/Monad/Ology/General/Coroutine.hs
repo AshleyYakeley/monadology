@@ -8,9 +8,11 @@ import Control.Monad.Ology.Specific.CoroutineT
 import Control.Monad.Ology.Specific.StepT
 import Import
 
+-- | Monads in which one can do coroutines.
 class Monad m => MonadCoroutine m where
     coroutineSuspend :: ((p -> m q) -> m r) -> CoroutineT p q m r
 
+-- | Uses threads.
 instance MonadCoroutine IO where
     coroutineSuspend :: ((p -> IO q) -> IO r) -> CoroutineT p q IO r
     coroutineSuspend action =
@@ -35,8 +37,7 @@ instance (MonadTransUnlift t, MonadCoroutine m, MonadTunnelIOInner m, Monad (t m
     coroutineSuspend call =
         MkStepT $
         liftWithUnlift $ \unlift ->
-            (fmap $ fmap $ fmap $ hoist lift) $
-            singleStep $ coroutineSuspend $ \pmq -> unlift $ call $ \p -> lift $ pmq p
+            (fmap $ fmap $ fmap $ hoist lift) $ unStepT $ coroutineSuspend $ \pmq -> unlift $ call $ \p -> lift $ pmq p
 
 -- | A type synoynm for a common pattern for closing opened resources, e.g.
 -- 'System.IO.withFile',
@@ -49,7 +50,7 @@ unpickWith ::
     => With m a
     -> m (a, m ())
 unpickWith w = do
-    etp <- singleStep $ coroutineSuspend w
+    etp <- unStepT $ coroutineSuspend w
     case etp of
         Left a -> return (a, return ())
         Right (MkTurn a f) -> return (a, fmap (\_ -> ()) $ runCoroutine $ f a)

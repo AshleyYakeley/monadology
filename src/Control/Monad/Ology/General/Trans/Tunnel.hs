@@ -8,8 +8,10 @@ import Control.Monad.Ology.General.Trans.Hoist
 import Control.Monad.Ology.Specific.ComposeInner
 import Import
 
+-- | Monad transformers that allow \"tunneling\" (working with the monad under the transformer).
 type MonadTransTunnel :: TransKind -> Constraint
 class (MonadTransHoist t, MonadInner (Tunnel t)) => MonadTransTunnel t where
+    -- | The tunnel monad of this transformer.
     type Tunnel t :: Type -> Type
     tunnel ::
            forall m r. Monad m
@@ -25,10 +27,10 @@ tunnelHoist mma sm1 = tunnel $ \tun -> mma $ tun sm1
 backHoist :: (MonadTransTunnel t, Monad ma, Monad mb) => (ma -/-> mb) -> t ma -/-> t mb
 backHoist wt tm = tunnel $ \unlift -> wt $ \tba -> unlift $ tm $ hoist tba
 
-backHoistW :: (MonadTransTunnel t, Monad ma, Monad mb) => Backraised ma mb -> Backraised (t ma) (t mb)
-backHoistW (MkBackraised f) = MkBackraised $ backHoist f
+wBackHoist :: (MonadTransTunnel t, Monad ma, Monad mb) => WBackraised ma mb -> WBackraised (t ma) (t mb)
+wBackHoist (MkWBackraised f) = MkWBackraised $ backHoist f
 
--- | Swap two transformers in a transformer stack
+-- | Commute two transformers in a transformer stack, by commuting their tunnel monads.
 commuteTWith ::
        forall ta tb m. (MonadTransTunnel ta, MonadTransTunnel tb, Monad m)
     => (forall r. Tunnel tb (Tunnel ta r) -> Tunnel ta (Tunnel tb r))
@@ -39,6 +41,7 @@ commuteTWith commutef tabm =
             case hasTransConstraint @Monad @tb @m of
                 Dict -> tunnel $ \unliftb -> tunnel $ \unlifta -> fmap commutef $ unliftb $ unlifta tabm
 
+-- | Commute two transformers in a transformer stack.
 commuteT ::
        forall ta tb m. (MonadTransTunnel ta, MonadTransTunnel tb, Monad (Tunnel ta), MonadInner (Tunnel tb), Monad m)
     => ta (tb m) --> tb (ta m)
@@ -52,7 +55,7 @@ commuteTBack call = commuteT $ call commuteT
 
 instance MonadInner inner => MonadTransTunnel (ComposeInner inner) where
     type Tunnel (ComposeInner inner) = inner
-    tunnel call = MkComposeInner $ call getComposeInner
+    tunnel call = MkComposeInner $ call unComposeInner
 
 class (MonadHoistIO m, MonadInner (TunnelIO m)) => MonadTunnelIO m where
     type TunnelIO m :: Type -> Type
@@ -65,27 +68,15 @@ instance MonadTunnelIO IO where
 instance (MonadTransTunnel t, MonadInner (Tunnel t), MonadTunnelIO m, MonadIO (t m)) => MonadTunnelIO (t m) where
     type TunnelIO (t m) = ComposeInner (Tunnel t) (TunnelIO m)
     tunnelIO call =
-        tunnel $ \unlift ->
-            tunnelIO $ \unliftIO -> fmap getComposeInner $ call $ fmap MkComposeInner . unliftIO . unlift
+        tunnel $ \unlift -> tunnelIO $ \unliftIO -> fmap unComposeInner $ call $ fmap MkComposeInner . unliftIO . unlift
 
 instance (MonadTransTunnel t, MonadInner (Tunnel t), TransConstraint MonadIO t) => TransConstraint MonadTunnelIO t where
     hasTransConstraint = withTransConstraintDict @MonadIO Dict
 
+-- | for use in 'WUnlift', etc.
 class (MonadTunnelIO m, MonadInner (TunnelIO m)) => MonadTunnelIOInner m
 
 instance (MonadTunnelIO m, MonadInner (TunnelIO m)) => MonadTunnelIOInner m
 
 instance (MonadTransTunnel t, MonadInner (Tunnel t), TransConstraint MonadIO t) => TransConstraint MonadTunnelIOInner t where
     hasTransConstraint = withTransConstraintDict @MonadIO Dict
-
----
-type Unlift :: ((Type -> Type) -> Constraint) -> TransKind -> Type
-type Unlift c t = forall (m :: Type -> Type). c m => t m --> m
-
-type WUnlift :: ((Type -> Type) -> Constraint) -> TransKind -> Type
-newtype WUnlift c t = MkWUnlift
-    { runWUnlift :: Unlift c t
-    }
-
-wUnliftAllRaised :: c m => WUnlift c t -> Raised (t m) m
-wUnliftAllRaised (MkWUnlift unlift) = MkRaised unlift

@@ -47,12 +47,20 @@ runExceptT' eia = do
         Right a -> return a
         Left _ -> fail "Left"
 
+runResultT' :: ResultT () IO --> IO
+runResultT' eia = do
+    ea <- runResultT eia
+    case ea of
+        SuccessResult a -> return a
+        FailureResult _ -> fail "Left"
+
 testException :: TestTree
 testException =
     testGroup
         "Exception"
         [ testAnException "IO" id $ ErrorCall "test"
         , testGroup "ExceptT () IO" $ pure $ testABracket @(ExceptT () IO) runExceptT' $ throwE ()
+        , testGroup "ResultT () IO" $ pure $ testABracket @(ResultT () IO) runResultT' $ throwR ()
         , testGroup "ComposeInner Maybe IO" $
           pure $ testABracket @(ComposeInner Maybe IO) runComposeInner $ liftInner Nothing
         ]

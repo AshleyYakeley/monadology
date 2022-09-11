@@ -12,7 +12,7 @@ import Control.Monad.Ology.General.Trans.Unlift
 import Control.Monad.Ology.Specific.ComposeOuter
 import Import
 
--- | A transformer that has no effects (such as state change or output)
+-- | A transformer that has no effects (such as state change or output).
 class MonadTransUnlift t => MonadTransAskUnlift t where
     askUnlift ::
            forall m. Monad m
@@ -20,20 +20,20 @@ class MonadTransUnlift t => MonadTransAskUnlift t where
     default askUnlift :: forall m. (MonadIdentity (Tunnel t), Monad m) => t m (WUnlift Monad t)
     askUnlift = tunnel $ \unlift -> pure $ pure $ MkWUnlift $ \tma -> fmap mToValue $ unlift tma
 
--- | A monad that has no effects over IO (such as state change or output)
+-- | A monad that has no effects over IO (such as state change or output).
 class MonadUnliftIO m => MonadAskUnliftIO m where
-    askUnliftIO :: m (Raised m IO)
-    askUnliftIO = tunnelIO $ \unlift -> pure $ pure $ MkRaised $ \ma -> fmap mToValue $ unlift ma
+    askUnliftIO :: m (WRaised m IO)
+    askUnliftIO = tunnelIO $ \unlift -> pure $ pure $ MkWRaised $ \ma -> fmap mToValue $ unlift ma
 
 instance MonadAskUnliftIO IO where
-    askUnliftIO = return $ MkRaised id
+    askUnliftIO = return $ MkWRaised id
 
 instance (MonadTransAskUnlift t, MonadAskUnliftIO m, MonadFail (t m), MonadIO (t m), MonadFix (t m)) =>
              MonadAskUnliftIO (t m) where
     askUnliftIO = do
         MkWUnlift unlift <- askUnlift
-        MkRaised unliftIO <- lift askUnliftIO
-        return $ MkRaised $ unliftIO . unlift
+        MkWRaised unliftIO <- lift askUnliftIO
+        return $ MkWRaised $ unliftIO . unlift
 
 instance MonadTransAskUnlift t => TransConstraint MonadAskUnliftIO t where
     hasTransConstraint =

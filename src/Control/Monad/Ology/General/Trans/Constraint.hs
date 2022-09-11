@@ -1,9 +1,9 @@
 module Control.Monad.Ology.General.Trans.Constraint where
 
+import Control.Monad.Ology.General.Function
 import Import
 
-type TransKind = (Type -> Type) -> (Type -> Type)
-
+-- | Transitivity of some constraint @c@ from @m@ to @t m@.
 type TransConstraint :: ((Type -> Type) -> Constraint) -> TransKind -> Constraint
 class TransConstraint c t where
     hasTransConstraint ::

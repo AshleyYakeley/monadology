@@ -11,6 +11,7 @@ import qualified Data.STRef.Lazy as Lazy
 import qualified Data.STRef.Strict as Strict
 import Import
 
+-- | A reference of a monad (as in 'StateT').
 data Ref m a = MkRef
     { refGet :: m a
     , refPut :: a -> m ()
@@ -34,6 +35,7 @@ refModifyM ref f = do
     a' <- f a
     refPut ref a'
 
+-- | Restore the original value of this reference after the operation.
 refRestore :: (MonadUnliftIO m, MonadException m) => Ref m a -> m --> m
 refRestore ref mr = bracket (refGet ref) (refPut ref) $ \_ -> mr
 
@@ -55,6 +57,7 @@ liftRef (MkRef g m) = MkRef (lift g) $ \a -> lift $ m a
 stateRef :: Monad m => Ref (StateT s m) s
 stateRef = MkRef get put
 
+-- | Run a state monad over this reference.
 refRunState :: Monad m => Ref m s -> StateT s m --> m
 refRunState ref sm = do
     olds <- refGet ref
@@ -71,6 +74,7 @@ strictSTRef r = MkRef (Strict.readSTRef r) (Strict.writeSTRef r)
 lazySTRef :: Lazy.STRef s a -> Ref (Lazy.ST s) a
 lazySTRef r = MkRef (Lazy.readSTRef r) (Lazy.writeSTRef r)
 
+-- | Use a reference as a parameter.
 refParam ::
        forall m a. (MonadUnliftIO m, MonadException m)
     => Ref m a
@@ -84,6 +88,7 @@ refParam ref = let
             mr
     in MkParam {..}
 
+-- | Use a reference as a product.
 refProd ::
        forall m a. (MonadUnliftIO m, MonadException m, Monoid a)
     => Ref m a

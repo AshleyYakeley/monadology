@@ -4,6 +4,7 @@ import Control.Monad.Ology.General
 import Control.Monad.Ology.Specific.Result
 import Import
 
+-- | Exceptions that can be thrown and caught in this monad.
 type Exn :: (Type -> Type) -> Type -> Type
 data Exn m e = MkExn
     { exnThrow :: forall a. e -> m a
@@ -78,10 +79,9 @@ mapExn f g exn =
         }
 
 liftExn ::
-       forall e t m. (MonadTransTunnel t, Monad m)
-    => Exn m e
-    -> Exn (t m) e
-liftExn (MkExn t c) = let
+       forall t m. (MonadTransTunnel t, Monad m)
+    => Exn m --> Exn (t m)
+liftExn (MkExn t c :: Exn m e) = let
     t' :: forall a. e -> t m a
     t' e = lift $ t e
     c' :: forall a. t m a -> (e -> t m a) -> t m a

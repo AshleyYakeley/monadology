@@ -6,6 +6,7 @@ import Control.Monad.Ology.General.Throw
 import Control.Monad.Ology.Specific.Result
 import Import
 
+-- | Monads that can catch this type of exception.
 class MonadThrow e m => MonadCatch e m where
     catch :: forall a. m a -> (e -> m a) -> m a
 

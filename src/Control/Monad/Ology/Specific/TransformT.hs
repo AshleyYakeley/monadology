@@ -6,7 +6,7 @@ import Import
 
 type TransformT :: forall k. (k -> Type) -> Type -> Type
 newtype TransformT f a = MkTransformT
-    { runTransformT :: forall r. (a -> f r) -> f r
+    { unTransformT :: forall r. (a -> f r) -> f r
     }
 
 instance Functor (TransformT f) where
@@ -24,7 +24,7 @@ instance TransConstraint Applicative TransformT where
 
 instance Monad (TransformT f) where
     return = pure
-    MkTransformT m >>= f = MkTransformT $ \bf -> m (\a -> runTransformT (f a) bf)
+    MkTransformT m >>= f = MkTransformT $ \bf -> m (\a -> unTransformT (f a) bf)
 
 instance TransConstraint Monad TransformT where
     hasTransConstraint = Dict
@@ -49,7 +49,7 @@ instance MonadFix m => MonadFix (TransformT m) where
         MkTransformT $ \amr -> do
             rec
                 (~(olda, r')) <-
-                    runTransformT (ama olda) $ \newa -> do
+                    unTransformT (ama olda) $ \newa -> do
                         r <- amr newa
                         return (newa, r)
             return r'
@@ -64,8 +64,8 @@ postTransformT mu =
         mu
         return r
 
-unmapTransformT :: TransformT f () -> f --> f
-unmapTransformT (MkTransformT uff) f = uff $ \() -> f
+transformTMap :: TransformT f () -> f --> f
+transformTMap (MkTransformT uff) f = uff $ \() -> f
 
 execMapTransformT :: Monad f => f (TransformT f a) -> TransformT f a
 execMapTransformT ffa =
@@ -74,10 +74,9 @@ execMapTransformT ffa =
         aff af
 
 transformParamRef ::
-       forall m a. Monad m
-    => Param m a
-    -> Ref (TransformT m) a
-transformParamRef param = let
+       forall m. Monad m
+    => Param m --> Ref (TransformT m)
+transformParamRef (param :: _ a) = let
     refGet :: TransformT m a
     refGet =
         MkTransformT $ \afr -> do

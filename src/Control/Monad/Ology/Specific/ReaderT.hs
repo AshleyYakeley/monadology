@@ -59,8 +59,8 @@ instance TransConstraint (MonadCatch e) (ReaderT r) where
 instance MonadOuter m => MonadOuter (ReaderT r m) where
     getExtract =
         ReaderT $ \r -> do
-            MkExtract maa <- getExtract
-            return $ MkExtract $ \(ReaderT rma) -> maa $ rma r
+            MkWExtract maa <- getExtract
+            return $ MkWExtract $ \(ReaderT rma) -> maa $ rma r
 
 instance TransConstraint MonadOuter (ReaderT s) where
     hasTransConstraint = Dict

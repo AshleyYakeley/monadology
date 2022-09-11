@@ -1,11 +1,12 @@
 module Control.Monad.Ology.General.Extract where
 
+import Control.Monad.Ology.General.Function
 import Control.Monad.Ology.General.Inner
 import Import
 
 -- | Instances of this type are isomorphic to @(Q,a)@ for some type @Q@ (with @Monoid Q@).
 class MonadInner m => MonadExtract m where
-    mToValue :: forall a. m a -> a
+    mToValue :: Extract m
 
 instance MonadExtract Identity where
     mToValue (Identity a) = a

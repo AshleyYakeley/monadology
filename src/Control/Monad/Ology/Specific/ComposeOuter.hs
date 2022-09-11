@@ -1,6 +1,7 @@
 module Control.Monad.Ology.Specific.ComposeOuter where
 
 import Control.Monad.Ology.General.Exception.Class
+import Control.Monad.Ology.General.Function
 import Control.Monad.Ology.General.IO
 import Control.Monad.Ology.General.Outer
 import Control.Monad.Ology.General.Trans.Constraint
@@ -11,7 +12,7 @@ import Import
 
 type ComposeOuter :: (Type -> Type) -> (Type -> Type) -> Type -> Type
 newtype ComposeOuter outer inner a = MkComposeOuter
-    { getComposeOuter :: outer (inner a)
+    { unComposeOuter :: outer (inner a)
     }
 
 instance (Foldable inner, Foldable outer, Functor outer) => Foldable (ComposeOuter outer inner) where
@@ -41,15 +42,15 @@ instance (Monad inner, MonadOuter outer) => Monad (ComposeOuter outer inner) whe
     MkComposeOuter oia >>= f =
         MkComposeOuter $ do
             ia <- oia
-            MkExtract oaa <- getExtract
+            MkWExtract oaa <- getExtract
             return $ do
                 a <- ia
-                oaa $ getComposeOuter $ f a
+                oaa $ unComposeOuter $ f a
 
 instance MonadOuter outer => TransConstraint Monad (ComposeOuter outer) where
     hasTransConstraint = Dict
 
-liftOuter :: (Functor outer, Applicative inner) => outer a -> ComposeOuter outer inner a
+liftOuter :: (Functor outer, Applicative inner) => outer --> ComposeOuter outer inner
 liftOuter oa = MkComposeOuter $ fmap pure oa
 
 instance MonadOuter outer => MonadTrans (ComposeOuter outer) where
@@ -70,8 +71,8 @@ instance MonadOuter outer => TransConstraint MonadFail (ComposeOuter outer) wher
 instance (MonadOuter outer, MonadFix inner) => MonadFix (ComposeOuter outer inner) where
     mfix f =
         MkComposeOuter $ do
-            MkExtract extract <- getExtract
-            return $ mfix $ \a -> extract $ getComposeOuter $ f a
+            MkWExtract extract <- getExtract
+            return $ mfix $ \a -> extract $ unComposeOuter $ f a
 
 instance MonadOuter outer => TransConstraint MonadFix (ComposeOuter outer) where
     hasTransConstraint = Dict
@@ -88,5 +89,5 @@ instance MonadOuter outer => MonadTransTunnel (ComposeOuter outer) where
     type Tunnel (ComposeOuter outer) = Identity
     tunnel call =
         MkComposeOuter $ do
-            MkExtract oaa <- getExtract
-            return $ fmap runIdentity $ call $ fmap Identity . oaa . getComposeOuter
+            MkWExtract oaa <- getExtract
+            return $ fmap runIdentity $ call $ fmap Identity . oaa . unComposeOuter

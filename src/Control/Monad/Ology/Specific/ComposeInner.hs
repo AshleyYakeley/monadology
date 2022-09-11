@@ -2,6 +2,7 @@ module Control.Monad.Ology.Specific.ComposeInner where
 
 import Control.Monad.Ology.General.Exception.Class
 import Control.Monad.Ology.General.Extract
+import Control.Monad.Ology.General.Function
 import Control.Monad.Ology.General.IO
 import Control.Monad.Ology.General.Identity
 import Control.Monad.Ology.General.Inner
@@ -14,7 +15,7 @@ import Import
 
 type ComposeInner :: (Type -> Type) -> (Type -> Type) -> Type -> Type
 newtype ComposeInner inner outer a = MkComposeInner
-    { getComposeInner :: outer (inner a)
+    { unComposeInner :: outer (inner a)
     }
 
 instance (Foldable inner, Foldable outer, Functor outer) => Foldable (ComposeInner inner outer) where
@@ -59,7 +60,7 @@ instance (MonadInner inner, Monad outer) => Monad (ComposeInner inner outer) whe
             ia <- oia
             case retrieveInner ia of
                 SuccessResult a -> do
-                    ib <- getComposeInner $ p a
+                    ib <- unComposeInner $ p a
                     return $ ia >> ib
                 FailureResult e -> return $ throwExc e
 
@@ -87,10 +88,10 @@ instance MonadInner inner => TransConstraint MonadInner (ComposeInner inner) whe
 instance (MonadInner inner, MonadOuter inner, MonadOuter outer) => MonadOuter (ComposeInner inner outer) where
     getExtract =
         MkComposeInner $ do
-            MkExtract oaa <- getExtract
+            MkWExtract oaa <- getExtract
             return $ do
-                MkExtract iaa <- getExtract
-                return $ MkExtract $ \(MkComposeInner oia) -> iaa $ oaa oia
+                MkWExtract iaa <- getExtract
+                return $ MkWExtract $ \(MkComposeInner oia) -> iaa $ oaa oia
 
 instance (MonadInner inner, MonadOuter inner) => TransConstraint MonadOuter (ComposeInner inner) where
     hasTransConstraint = Dict
@@ -99,7 +100,7 @@ instance (MonadInner inner, MonadFix outer) => MonadFix (ComposeInner inner oute
     mfix ama =
         MkComposeInner $
         mfix $ \ia ->
-            getComposeInner $
+            unComposeInner $
             ama $
             case retrieveInner ia of
                 SuccessResult a -> a
@@ -127,7 +128,7 @@ instance (MonadInner inner, MonadIO outer) => MonadIO (ComposeInner inner outer)
 instance MonadInner inner => TransConstraint MonadIO (ComposeInner inner) where
     hasTransConstraint = Dict
 
-liftInner :: Applicative outer => inner a -> ComposeInner inner outer a
+liftInner :: Applicative outer => inner --> ComposeInner inner outer
 liftInner na = MkComposeInner $ pure na
 
 instance (MonadInner inner, MonadException inner, MonadException m) => MonadException (ComposeInner inner m) where
@@ -138,8 +139,8 @@ instance (MonadInner inner, MonadException inner, MonadException m) => MonadExce
         MkComposeInner $ do
             ira <- tryExc mia
             case fmap retrieveInner ira of
-                FailureResult e -> getComposeInner $ handler $ Right e
-                SuccessResult (FailureResult e) -> getComposeInner $ handler $ Left e
+                FailureResult e -> unComposeInner $ handler $ Right e
+                SuccessResult (FailureResult e) -> unComposeInner $ handler $ Left e
                 SuccessResult (SuccessResult a) -> return $ return a
 
 instance (MonadInner inner, MonadException inner) => TransConstraint MonadException (ComposeInner inner) where

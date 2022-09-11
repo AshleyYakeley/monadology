@@ -1,5 +1,5 @@
 module Control.Monad.Ology.General.IO
-    ( module Control.Monad.IO.Class
+    ( module I
     ) where
 
-import Control.Monad.IO.Class
+import Control.Monad.IO.Class as I

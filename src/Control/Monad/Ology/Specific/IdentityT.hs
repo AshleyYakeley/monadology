@@ -83,13 +83,13 @@ instance MonadTransTunnel IdentityT where
 instance MonadOuter m => MonadOuter (IdentityT m) where
     getExtract =
         IdentityT $ do
-            MkExtract maa <- getExtract
-            return $ MkExtract $ maa . runIdentityT
+            MkWExtract maa <- getExtract
+            return $ MkWExtract $ maa . runIdentityT
 
 instance MonadTransUnlift IdentityT where
     liftWithUnlift call = IdentityT $ call runIdentityT
 
 instance MonadTransAskUnlift IdentityT
 
-identityWUnliftAll :: WUnlift c IdentityT
-identityWUnliftAll = MkWUnlift runIdentityT
+identityWUnlift :: WUnlift c IdentityT
+identityWUnlift = MkWUnlift runIdentityT

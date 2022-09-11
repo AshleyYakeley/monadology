@@ -21,7 +21,7 @@ testComposeInnerApplicative =
                 liftInner Nothing
             c2 :: ComposeInner Maybe IO ()
             c2 = lift $ writeIORef r2 True
-        _ <- getComposeInner $ liftA2 (,) c1 c2
+        _ <- unComposeInner $ liftA2 (,) c1 c2
         v1 <- readIORef r1
         v2 <- readIORef r2
         assertEqual "v1" True v1
@@ -37,7 +37,7 @@ testComposeInnerAlternative =
             c1 = lift $ writeIORef r1 True
             c2 :: ComposeInner Maybe IO ()
             c2 = lift $ writeIORef r2 True
-        _ <- getComposeInner $ c1 <|> c2
+        _ <- unComposeInner $ c1 <|> c2
         v1 <- readIORef r1
         v2 <- readIORef r2
         assertEqual "v1" True v1

@@ -7,6 +7,7 @@ import Import
 -- | borrowed from the lens package
 type Lens' a b = forall f. Functor f => (b -> f b) -> a -> f a
 
+-- | A parameter of a monad (as in 'ReaderT').
 data Param m a = MkParam
     { paramAsk :: m a
     , paramWith :: a -> m --> m

@@ -132,7 +132,7 @@ instance MonadTransUnlift LifecycleT where
 addLifeState :: MonadIO m => LifeState -> LifecycleT m ()
 addLifeState ls =
     MkLifecycleT $ \var -> do
-        dangerousMVarRun var $ do
+        dangerousMVarRunStateT var $ do
             s <- get
             put $ ls <> s
 
@@ -143,7 +143,7 @@ lifecycleOnCloseIO closer = addLifeState $ MkLifeState $ Just closer
 -- | Add a closing action.
 lifecycleOnClose :: MonadAskUnliftIO m => m () -> LifecycleT m ()
 lifecycleOnClose closer = do
-    MkRaised unlift <- lift askUnliftIO
+    MkWRaised unlift <- lift askUnliftIO
     lifecycleOnCloseIO $ unlift closer
 
 -- | Convert a lifecycle to a function that uses the \"with\" pattern.

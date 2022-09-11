@@ -61,28 +61,27 @@ instance MonadTransTunnel (StateT s) where
             call $ \(StateT smrs) -> fmap (\(a, s) -> (Endo $ pure s, a)) $ smrs olds
 
 instance MonadTransUnlift (StateT s) where
-    liftWithUnlift call = liftWithMVarStateT $ \var -> call $ mVarRun var
+    liftWithUnlift call = liftWithMVarStateT $ \var -> call $ mVarRunStateT var
 
-mVarRun :: MonadTunnelIOInner m => MVar s -> StateT s m --> m
-mVarRun var (StateT smr) =
+-- | Run the 'StateT' on an 'MVar', taking the initial state and putting the final state.
+mVarRunStateT :: MVar s -> Unlift MonadTunnelIOInner (StateT s)
+mVarRunStateT var (StateT smr) =
     tunnelIO $ \unlift ->
         modifyMVar var $ \olds ->
             fmap (\fas -> (fromMaybe olds $ mToMaybe $ fmap snd fas, fmap fst fas)) $ unlift $ smr olds
 
-mVarUnitRun :: MonadTunnelIOInner m => MVar s -> m --> m
-mVarUnitRun var ma = mVarRun var $ lift ma
+-- | Take the 'MVar' before and put it back after.
+mVarRunLocked :: MonadTunnelIOInner m => MVar s -> m --> m
+mVarRunLocked var ma = mVarRunStateT var $ lift ma
 
-mVarUnitUnlock :: MVar () -> IO --> IO
-mVarUnitUnlock var = bracket_ (putMVar var ()) (takeMVar var)
-
-stateDiscardingUntrans :: s -> Unlift MonadIO (StateT s)
-stateDiscardingUntrans s mr = do
+discardingStateTUnlift :: s -> Unlift MonadIO (StateT s)
+discardingStateTUnlift s mr = do
     (r, _discarded) <- runStateT mr s
     return r
 
 -- | Dangerous, because the MVar won't be released on exception.
-dangerousMVarRun :: MVar s -> Unlift MonadIO (StateT s)
-dangerousMVarRun var (StateT smr) = do
+dangerousMVarRunStateT :: MVar s -> Unlift MonadIO (StateT s)
+dangerousMVarRunStateT var (StateT smr) = do
     olds <- liftIO $ takeMVar var
     (a, news) <- smr olds
     liftIO $ putMVar var news
@@ -98,6 +97,3 @@ liftWithMVarStateT vma =
         r <- vma var
         finalstate <- liftIO $ takeMVar var
         return (r, finalstate)
-
-mVarWIORun :: MVar s -> Raised (StateT s IO) IO
-mVarWIORun var = MkRaised $ mVarRun var
