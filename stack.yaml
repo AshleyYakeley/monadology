@@ -4,5 +4,7 @@ ghc-options:
     "$locals": -Werror
 
 extra-deps:
+- invariant-0.6
 - countable-1.2
 - witness-0.6.1
+- type-rig-0.1

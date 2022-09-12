@@ -21,7 +21,7 @@ instance Functor m => Invariant (Ref m) where
     invmap f g (MkRef gt pt) = MkRef (fmap f gt) (pt . g)
 
 instance Applicative m => Productable (Ref m) where
-    pUnit = MkRef (pure ()) (\_ -> pure ())
+    rUnit = MkRef (pure ()) (\_ -> pure ())
     ra <***> rb = MkRef (liftA2 (,) (refGet ra) (refGet rb)) $ \(a, b) -> refPut ra a *> refPut rb b
 
 refModify :: Monad m => Ref m a -> (a -> a) -> m ()

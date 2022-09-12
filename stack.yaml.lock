@@ -5,6 +5,13 @@
 
 packages:
 - completed:
+    hackage: invariant-0.6@sha256:67ecd31a36c3a9a686a8bee9dbee5a395a4c68b758262413c0355bae03a5a114,3563
+    pantry-tree:
+      size: 650
+      sha256: 891bd4f57f67034760437dd19387122b236f1141151ed8f62682b3088ad85e20
+  original:
+    hackage: invariant-0.6
+- completed:
     hackage: countable-1.2@sha256:4c1d43a9886ddd9ef02b3df7042122d8cf3390256d51b061b24365b682652ad2,2638
     pantry-tree:
       size: 1050
@@ -12,15 +19,22 @@ packages:
   original:
     hackage: countable-1.2
 - completed:
-    hackage: witness-0.6@sha256:62d4c841d71fc4856a3221a945f9053b6bfaf8d1e6414dc834afb657222ff050,3513
+    hackage: witness-0.6.1@sha256:b522cb9e4d6eea7cb6361c50ec330ecc82d69596f57dbdff1dcee2127b557adc,3690
     pantry-tree:
-      size: 2710
-      sha256: 5b819be1799624137a7fa96cbb459443c32cea904fe3df3394960cd2db3c3c03
+      size: 2985
+      sha256: 71817dc97637b387de201feaece2285b629e7ca2a66ef5889115efc1c0eb82f6
   original:
-    hackage: witness-0.6
+    hackage: witness-0.6.1
+- completed:
+    hackage: type-rig-0.1@sha256:7ca3cb544b28926b2070cd45969beb5c65d540e15f487df824cbc738c2f5fb1a,2158
+    pantry-tree:
+      size: 472
+      sha256: 361a154dcc5f62c3fe54d072a7094b97c3ff4f753f9370ef17b17859c76e4662
+  original:
+    hackage: type-rig-0.1
 snapshots:
 - completed:
-    size: 619093
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/19/5.yaml
-    sha256: b936d27d647a31a8834d3efec126e2a07dee9c9bd6dd401d9bdac77e7b278f1e
-  original: lts-19.5
+    size: 619399
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/19/22.yaml
+    sha256: 5098594e71bdefe0c13e9e6236f12e3414ef91a2b89b029fd30e8fc8087f3a07
+  original: lts-19.22

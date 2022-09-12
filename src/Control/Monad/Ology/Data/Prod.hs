@@ -14,7 +14,7 @@ instance Functor m => Invariant (Prod m) where
     invmap f g (MkProd t l) = MkProd (t . g) (\mr -> fmap (fmap f) $ l mr)
 
 instance Applicative m => Productable (Prod m) where
-    pUnit = MkProd (\() -> pure ()) $ fmap $ \r -> (r, ())
+    rUnit = MkProd (\() -> pure ()) $ fmap $ \r -> (r, ())
     (<***>) :: forall a b. Prod m a -> Prod m b -> Prod m (a, b)
     MkProd tellA listenA <***> MkProd tellB listenB = let
         tellAB :: (a, b) -> m ()

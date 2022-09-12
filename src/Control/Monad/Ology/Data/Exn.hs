@@ -15,7 +15,7 @@ instance Invariant (Exn m) where
     invmap f g (MkExn t c) = MkExn (t . g) (\ma ema -> c ma $ ema . f)
 
 instance Summable (Exn m) where
-    pNone = MkExn {exnThrow = absurd, exnCatch = \m _ -> m}
+    rVoid = MkExn {exnThrow = absurd, exnCatch = \m _ -> m}
     exn1 <+++> exn2 =
         MkExn
             { exnThrow = either (exnThrow exn1) (exnThrow exn2)

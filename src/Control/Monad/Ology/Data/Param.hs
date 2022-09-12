@@ -17,7 +17,7 @@ instance Functor m => Invariant (Param m) where
     invmap f g (MkParam a w) = MkParam (fmap f a) (\b mr -> w (g b) mr)
 
 instance Applicative m => Productable (Param m) where
-    pUnit = MkParam (pure ()) (\() -> id)
+    rUnit = MkParam (pure ()) (\() -> id)
     pa <***> pb = MkParam (liftA2 (,) (paramAsk pa) (paramAsk pb)) (\(a, b) -> paramWith pa a . paramWith pb b)
 
 paramLocal ::
