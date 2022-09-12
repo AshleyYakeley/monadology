@@ -14,15 +14,14 @@ module Control.Monad.Ology.Specific.StackT
     , MonadTransStackUnlift
     , concatMonadTransStackUnliftDict
     , stackLiftWithUnlift
-    , concatMonadTransStackUnliftAllDict
     , concatFstMFunction
     , concatSndMFunction
     , stackCommute
     , transStackConcatRefl
-    , StackUnliftAll
-    , WStackUnliftAll(..)
-    , consWStackUnliftAll
-    , stackLiftWithUnliftAll
+    , StackUnlift
+    , WStackUnlift(..)
+    , consWStackUnlift
+    , stackLiftWithStackUnlift
     ) where
 
 import Control.Monad.Ology.General
@@ -393,19 +392,8 @@ stackLiftWithUnlift ::
     => m -/-> ApplyStack tt m
 stackLiftWithUnlift = unWBackraised $ coerce $ wLiftWithUnlift @(StackT tt) @m
 
-concatMonadTransStackUnliftAllDict ::
-       forall tt1 tt2. (MonadTransStackUnlift tt1, MonadTransStackUnlift tt2)
-    => Dict (MonadTransStackUnlift (Concat tt1 tt2))
-concatMonadTransStackUnliftAllDict =
-    case concatMonadTransStackUnliftDict @tt1 @tt2 of
-        Dict ->
-            case concatIsDict @_ @(Compose Dict MonadTransUnlift) @tt1 @tt2 of
-                Dict ->
-                    case concatIsDict @_ @(Compose Dict MonadTransTunnel) @tt1 @tt2 of
-                        Dict -> Dict
-
-newtype LiftWithUnliftAll t = MkLiftWithUnliftAll
-    { unLiftWithUnliftAll :: forall m r. MonadIO m => (Unlift MonadTunnelIOInner t -> m r) -> t m r
+newtype LiftWithUnlift t = MkLiftWithUnlift
+    { unLiftWithUnlift :: forall m r. MonadIO m => (Unlift MonadTunnelIOInner t -> m r) -> t m r
     }
 
 witFunctorOneTunnelIOStackDict ::
@@ -417,12 +405,12 @@ witFunctorOneTunnelIOStackDict (ConsListType (Compose Dict) lt) =
     case witFunctorOneTunnelIOStackDict @_ @m lt of
         Dict -> Dict
 
-stackJoinUnliftAll ::
+stackJoinUnlift ::
        ListType (Compose Dict MonadTransUnlift) tt
     -> Unlift MonadTunnelIOInner t
     -> Unlift MonadTunnelIOInner (StackT tt)
     -> Unlift MonadTunnelIOInner (StackT (t ': tt))
-stackJoinUnliftAll w tmm stmm (stma :: StackT (t ': tt) m a) =
+stackJoinUnlift w tmm stmm (stma :: StackT (t ': tt) m a) =
     case witTransStackDict @MonadTunnelIOInner @tt @m $ mapListType (\(Compose Dict) -> Compose Dict) w of
         Dict ->
             case witFunctorOneTunnelIOStackDict @tt @m w of
@@ -438,11 +426,11 @@ instance MonadTransStackUnlift tt => MonadTransUnlift (StackT tt) where
         => (Unlift MonadTunnelIOInner (StackT tt) -> m r)
         -> StackT tt m r
     liftWithUnlift = let
-        build :: forall tt'. ListType (Compose Dict MonadTransUnlift) tt' -> LiftWithUnliftAll (StackT tt')
-        build NilListType = MkLiftWithUnliftAll $ \call -> MkStackT $ call unStackT
+        build :: forall tt'. ListType (Compose Dict MonadTransUnlift) tt' -> LiftWithUnlift (StackT tt')
+        build NilListType = MkLiftWithUnlift $ \call -> MkStackT $ call unStackT
         build (ConsListType (Compose Dict) (w :: ListType _ tt0)) =
             case build w of
-                MkLiftWithUnliftAll liftWithUnlift' -> let
+                MkLiftWithUnlift liftWithUnlift' -> let
                     liftWithUnlift'' ::
                            forall m' r'. MonadIO m'
                         => (Unlift MonadTunnelIOInner (StackT tt') -> m' r')
@@ -452,9 +440,9 @@ instance MonadTransStackUnlift tt => MonadTransUnlift (StackT tt) where
                         case witTransStackDict @MonadIO @tt0 @m' $ mapListType (\(Compose Dict) -> Compose Dict) w of
                             Dict ->
                                 liftWithUnlift $ \unlift1 ->
-                                    unStackT $ liftWithUnlift' $ \unlift2 -> call $ stackJoinUnliftAll w unlift1 unlift2
-                    in MkLiftWithUnliftAll liftWithUnlift''
-        in unLiftWithUnliftAll $ build $ representative @_ @(ListType (Compose Dict MonadTransUnlift)) @tt
+                                    unStackT $ liftWithUnlift' $ \unlift2 -> call $ stackJoinUnlift w unlift1 unlift2
+                    in MkLiftWithUnlift liftWithUnlift''
+        in unLiftWithUnlift $ build $ representative @_ @(ListType (Compose Dict MonadTransUnlift)) @tt
     getDiscardingUnlift ::
            forall m. Monad m
         => StackT tt m (WUnlift MonadTunnelIOInner (StackT tt))
@@ -474,7 +462,7 @@ instance MonadTransStackUnlift tt => MonadTransUnlift (StackT tt) where
                                 withTransConstraintTM @Monad $ do
                                     MkWUnlift unlift1 <- getDiscardingUnlift
                                     MkWUnlift unlift2 <- lift $ unStackT $ getDiscardingUnlift' @m'
-                                    return $ MkWUnlift $ stackJoinUnliftAll w unlift1 unlift2
+                                    return $ MkWUnlift $ stackJoinUnlift w unlift1 unlift2
                     in MkGetDiscardingUnlift getDiscardingUnlift''
         in unGetDiscardingUnlift $ build $ representative @_ @(ListType (Compose Dict MonadTransUnlift)) @tt
 
@@ -512,28 +500,28 @@ transStackConcatRefl ::
     => (ApplyStack (Concat tt1 tt2) m) :~: (ApplyStack tt1 (ApplyStack tt2 m))
 transStackConcatRefl = applyConcatRefl @_ @tt1 @tt2 @m @(Compose Dict MonadTransUnlift)
 
-type StackUnliftAll (tt :: [TransKind]) = forall m. MonadUnliftIO m => ApplyStack tt m --> m
+type StackUnlift (tt :: [TransKind]) = forall m. MonadUnliftIO m => ApplyStack tt m --> m
 
-newtype WStackUnliftAll (tt :: [TransKind]) = MkWStackUnliftAll
-    { runWStackUnliftAll :: StackUnliftAll tt
+newtype WStackUnlift (tt :: [TransKind]) = MkWStackUnlift
+    { runWStackUnlift :: StackUnlift tt
     }
 
-consWStackUnliftAll ::
+consWStackUnlift ::
        forall t tt. IsStack (TransConstraint MonadUnliftIO) tt
     => WUnlift MonadUnliftIO t
-    -> WStackUnliftAll tt
-    -> WStackUnliftAll (t ': tt)
-consWStackUnliftAll (MkWUnlift unlift1) (MkWStackUnliftAll unliftr) = let
+    -> WStackUnlift tt
+    -> WStackUnlift (t ': tt)
+consWStackUnlift (MkWUnlift unlift1) (MkWStackUnlift unliftr) = let
     unlift ::
            forall m. MonadUnliftIO m
         => t (ApplyStack tt m) --> m
     unlift =
         case transStackDict @MonadUnliftIO @tt @m of
             Dict -> unliftr . unlift1
-    in MkWStackUnliftAll unlift
+    in MkWStackUnlift unlift
 
-stackLiftWithUnliftAll ::
+stackLiftWithStackUnlift ::
        forall tt m r. (MonadTransStackUnlift tt, MonadIO m)
-    => (StackUnliftAll tt -> m r)
+    => (StackUnlift tt -> m r)
     -> ApplyStack tt m r
-stackLiftWithUnliftAll call = unStackT @tt $ liftWithUnlift $ \unlift -> call $ \astm -> unlift $ MkStackT astm
+stackLiftWithStackUnlift call = unStackT @tt $ liftWithUnlift $ \unlift -> call $ \astm -> unlift $ MkStackT astm

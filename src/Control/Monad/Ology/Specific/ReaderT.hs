@@ -77,12 +77,12 @@ instance MonadTransUnlift (ReaderT r) where
 
 instance MonadTransAskUnlift (ReaderT r)
 
-readerTUnliftAllToT ::
+readerTUnliftToT ::
        forall t m. (MonadTransUnlift t, MonadTunnelIO m)
     => ReaderT (WUnlift MonadTunnelIOInner t) m --> t m
-readerTUnliftAllToT rma = liftWithUnlift $ \tr -> runReaderT rma $ MkWUnlift tr
+readerTUnliftToT rma = liftWithUnlift $ \tr -> runReaderT rma $ MkWUnlift tr
 
-tToReaderTUnliftAll :: MonadTunnelIO m => t m --> ReaderT (WUnlift Monad t) m
-tToReaderTUnliftAll tma = do
+tToReaderTUnlift :: MonadTunnelIO m => t m --> ReaderT (WUnlift Monad t) m
+tToReaderTUnlift tma = do
     MkWUnlift unlift <- ask
     lift $ unlift tma
