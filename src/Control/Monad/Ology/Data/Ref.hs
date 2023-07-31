@@ -95,8 +95,8 @@ refProd ::
     -> Prod m a
 refProd ref = let
     prodTell a = refModify ref $ (<>) a
-    prodListen :: forall r. m r -> m (r, a)
-    prodListen mr =
+    prodCollect :: forall r. m r -> m (r, a)
+    prodCollect mr =
         refRestore ref $ do
             refPut ref mempty
             r <- mr

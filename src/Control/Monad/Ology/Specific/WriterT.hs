@@ -2,11 +2,18 @@
 
 module Control.Monad.Ology.Specific.WriterT
     ( module Control.Monad.Trans.Writer
+    , module Control.Monad.Ology.Specific.WriterT
     ) where
 
 import Control.Monad.Ology.General
 import Control.Monad.Trans.Writer hiding (liftCallCC, liftCatch)
 import Import
+
+collect :: (Monad m, Monoid w) => WriterT w m a -> WriterT w m (a, w)
+collect wmr = censor (\_ -> mempty) $ listen wmr
+
+evalWriterT :: Monad m => WriterT w m a -> m a
+evalWriterT wma = fmap fst $ runWriterT wma
 
 instance Monoid w => TransConstraint Functor (WriterT w) where
     hasTransConstraint = Dict
