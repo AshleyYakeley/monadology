@@ -36,8 +36,8 @@ refModifyM ref f = do
     refPut ref a'
 
 -- | Restore the original value of this reference after the operation.
-refRestore :: (MonadUnliftIO m, MonadException m) => Ref m a -> m --> m
-refRestore ref mr = bracket (refGet ref) (refPut ref) $ \_ -> mr
+refRestore :: MonadException m => Ref m a -> m --> m
+refRestore ref mr = bracketNoMask (refGet ref) (refPut ref) $ \_ -> mr
 
 lensMapRef ::
        forall m a b. Monad m
@@ -76,7 +76,7 @@ lazySTRef r = MkRef (Lazy.readSTRef r) (Lazy.writeSTRef r)
 
 -- | Use a reference as a parameter.
 refParam ::
-       forall m a. (MonadUnliftIO m, MonadException m)
+       forall m a. MonadException m
     => Ref m a
     -> Param m a
 refParam ref = let
@@ -90,7 +90,7 @@ refParam ref = let
 
 -- | Use a reference as a product.
 refProd ::
-       forall m a. (MonadUnliftIO m, MonadException m, Monoid a)
+       forall m a. (MonadException m, Monoid a)
     => Ref m a
     -> Prod m a
 refProd ref = let

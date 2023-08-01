@@ -20,5 +20,5 @@ import Control.Monad.Ology.Specific.ResultT as I
 import Control.Monad.Ology.Specific.StackT as I
 import Control.Monad.Ology.Specific.StateT as I
 import Control.Monad.Ology.Specific.StepT as I
-import Control.Monad.Ology.Specific.TransformT as I
+import Control.Monad.Ology.Specific.WithT as I
 import Control.Monad.Ology.Specific.WriterT as I

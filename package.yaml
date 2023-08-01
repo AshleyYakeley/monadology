@@ -110,7 +110,7 @@ library:
     - Control.Monad.Ology.Specific.ContT
     - Control.Monad.Ology.Specific.ReaderStateT
     - Control.Monad.Ology.Specific.StackT
-    - Control.Monad.Ology.Specific.TransformT
+    - Control.Monad.Ology.Specific.WithT
     - Control.Monad.Ology.Specific.ResultT
     - Control.Monad.Ology.Specific.StepT
     - Control.Monad.Ology.Specific.CoroutineT
@@ -131,6 +131,7 @@ tests:
     dependencies:
       - base >= 4.15 && < 5
       - transformers >= 0.5
+      - text >= 2.0
       - monadology
       - tasty >= 1.4
       - tasty-hunit >= 0.10
@@ -141,4 +142,5 @@ tests:
       - Compose
       - Coroutine
       - Lifecycle
+      - Data
     ghc-options: -threaded

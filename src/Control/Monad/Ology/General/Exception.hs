@@ -49,3 +49,29 @@ bracket_ ::
     -> m ()
     -> m --> m
 bracket_ before after thing = bracket before (const after) (const thing)
+
+-- | Like 'bracket", but doesn\'t mask asynchronous exceptions.
+bracketNoMask ::
+       forall m a b. MonadException m
+    => m a
+    -> (a -> m ())
+    -> (a -> m b)
+    -> m b
+bracketNoMask before after thing = do
+    a <- before
+    b <- onException (thing a) (after a)
+    after a
+    return b
+
+-- | Like 'bracketNoMask", but doesn\'t catch any exceptions.
+bracketFake ::
+       forall m a b. Monad m
+    => m a
+    -> (a -> m ())
+    -> (a -> m b)
+    -> m b
+bracketFake before after thing = do
+    a <- before
+    b <- thing a
+    after a
+    return b

@@ -8,6 +8,7 @@ import Data.IORef
 import Prelude
 import Test.Tasty
 import Test.Tasty.HUnit
+import Useful
 
 testACatch ::
        forall m e. (Eq e, Show e, MonadCatch e m)
@@ -54,6 +55,51 @@ runResultT' eia = do
         SuccessResult a -> return a
         FailureResult _ -> fail "Left"
 
+data Info = forall m e. (MonadCatch e m, MonadIO m, Eq e, Show e) =>
+                            MkInfo
+    { iName :: String
+    , iRun :: m --> IO
+    , iExc :: Int -> e
+    }
+
+newtype TestExc =
+    MkTestExc Int
+    deriving (Eq, Show)
+
+instance Exception TestExc
+
+ioInfo :: Info
+ioInfo = MkInfo {iName = "IO", iRun = \ioa -> ioa, iExc = MkTestExc}
+
+iRunWithT :: WithT IO --> IO
+iRunWithT tia = unWithT tia return
+
+transformInfo :: Info
+transformInfo = MkInfo {iName = "WithT IO", iRun = iRunWithT, iExc = MkTestExc}
+
+testCatch :: Info -> TestTree
+testCatch MkInfo {..} =
+    testCase iName $
+    compareTest "ABCE" $ \post -> do
+        post "A"
+        found <-
+            iRun $
+            try $ do
+                liftIO $ post "B"
+                reu <-
+                    try $ do
+                        liftIO $ post "C"
+                        () <- throw $ iExc 52
+                        liftIO $ post "D"
+                liftIO $ assertEqual "exc1" (FailureResult $ iExc 52) reu
+                liftIO $ post "E"
+                () <- throw $ iExc 74
+                liftIO $ post "F"
+        assertEqual "exc2" (FailureResult $ iExc 74) found
+
+testCatches :: TestTree
+testCatches = testGroup "catch" [testCatch ioInfo, testCatch transformInfo]
+
 testException :: TestTree
 testException =
     testGroup
@@ -63,4 +109,5 @@ testException =
         , testGroup "ResultT () IO" $ pure $ testABracket @(ResultT () IO) runResultT' $ throwR ()
         , testGroup "ComposeInner Maybe IO" $
           pure $ testABracket @(ComposeInner Maybe IO) runComposeInner $ liftInner Nothing
+        , testCatches
         ]

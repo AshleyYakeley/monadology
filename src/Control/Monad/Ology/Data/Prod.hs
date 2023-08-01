@@ -1,5 +1,6 @@
 module Control.Monad.Ology.Data.Prod where
 
+import Control.Monad.Ology.Data.Param
 import Control.Monad.Ology.General
 import Control.Monad.Ology.Specific.WriterT
 import Import
@@ -52,6 +53,21 @@ prodTellItem p a = prodTell p $ pure a
 
 prodCensorItems :: (Monad f, Monad m) => Prod m (f a) -> (a -> f a) -> m --> m
 prodCensorItems p afa = prodCensor p $ \fa -> fa >>= afa
+
+lensMapProd ::
+       forall m a b. (Monad m, Monoid a, Monoid b)
+    => Lens' a b
+    -> Prod m a
+    -> Prod m b
+lensMapProd l p = let
+    prodTell' :: b -> m ()
+    prodTell' b = prodTell p $ runIdentity $ l (\_ -> Identity b) mempty
+    prodCollect' :: forall r. m r -> m (r, b)
+    prodCollect' mr = do
+        (r, a) <- prodCollect p mr
+        prodTell p $ runIdentity $ l (\_ -> Identity mempty) a
+        return (r, getConst $ l Const a)
+    in MkProd prodTell' prodCollect'
 
 liftProd :: (MonadTransTunnel t, Monad m) => Prod m --> Prod (t m)
 liftProd (MkProd t l) =

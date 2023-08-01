@@ -43,7 +43,7 @@ instance (MonadTransUnlift t, MonadCoroutine m, MonadTunnelIOInner m, Monad (t m
 -- 'System.IO.withFile',
 -- 'System.IO.withBinaryFile',
 -- etc.
-type With (m :: Type -> Type) (t :: Type) = forall (r :: Type). (t -> m r) -> m r
+type With (m :: k -> Type) (t :: Type) = forall (r :: k). (t -> m r) -> m r
 
 unpickWith ::
        forall m a. MonadCoroutine m
@@ -54,3 +54,13 @@ unpickWith w = do
     case etp of
         Left a -> return (a, return ())
         Right (MkTurn a f) -> return (a, fmap (\_ -> ()) $ runCoroutine $ f a)
+
+pickWith ::
+       forall m a. Monad m
+    => m (a, m ())
+    -> With m a
+pickWith mac amr = do
+    (a, closer) <- mac
+    r <- amr a
+    closer
+    return r
