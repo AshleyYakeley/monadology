@@ -33,7 +33,7 @@ instance MonadCoroutine IO where
                     putMVar outvar $ Left r
             takeMVar outvar
 
-instance (MonadTransUnlift t, MonadCoroutine m, MonadTunnelIOInner m, Monad (t m)) => MonadCoroutine (t m) where
+instance (MonadTransUnlift t, MonadCoroutine m, MonadTunnelIO m, Monad (t m)) => MonadCoroutine (t m) where
     coroutineSuspend call =
         MkStepT $
         liftWithUnlift $ \unlift ->

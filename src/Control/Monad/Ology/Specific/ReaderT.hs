@@ -79,7 +79,7 @@ instance MonadTransAskUnlift (ReaderT r)
 
 readerTUnliftToT ::
        forall t m. (MonadTransUnlift t, MonadTunnelIO m)
-    => ReaderT (WUnlift MonadTunnelIOInner t) m --> t m
+    => ReaderT (WUnlift MonadTunnelIO t) m --> t m
 readerTUnliftToT rma = liftWithUnlift $ \tr -> runReaderT rma $ MkWUnlift tr
 
 tToReaderTUnlift :: MonadTunnelIO m => t m --> ReaderT (WUnlift Monad t) m

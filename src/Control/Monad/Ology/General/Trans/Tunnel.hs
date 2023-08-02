@@ -71,11 +71,3 @@ instance (MonadTransTunnel t, MonadTunnelIO m, MonadIO (t m)) => MonadTunnelIO (
 
 instance (MonadTransTunnel t, TransConstraint MonadIO t) => TransConstraint MonadTunnelIO t where
     hasTransConstraint = withTransConstraintDict @MonadIO Dict
-
--- | for use in 'WUnlift', etc.
-class (MonadTunnelIO m, MonadInner (TunnelIO m)) => MonadTunnelIOInner m
-
-instance (MonadTunnelIO m, MonadInner (TunnelIO m)) => MonadTunnelIOInner m
-
-instance (MonadTransTunnel t, TransConstraint MonadIO t) => TransConstraint MonadTunnelIOInner t where
-    hasTransConstraint = withTransConstraintDict @MonadIO Dict

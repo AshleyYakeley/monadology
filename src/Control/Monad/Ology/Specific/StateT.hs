@@ -64,14 +64,14 @@ instance MonadTransUnlift (StateT s) where
     liftWithUnlift call = liftWithMVarStateT $ \var -> call $ mVarRunStateT var
 
 -- | Run the 'StateT' on an 'MVar', taking the initial state and putting the final state.
-mVarRunStateT :: MVar s -> Unlift MonadTunnelIOInner (StateT s)
+mVarRunStateT :: MVar s -> Unlift MonadTunnelIO (StateT s)
 mVarRunStateT var (StateT smr) =
     tunnelIO $ \unlift ->
         modifyMVar var $ \olds ->
             fmap (\fas -> (fromMaybe olds $ mToMaybe $ fmap snd fas, fmap fst fas)) $ unlift $ smr olds
 
 -- | Take the 'MVar' before and put it back after.
-mVarRunLocked :: MonadTunnelIOInner m => MVar s -> m --> m
+mVarRunLocked :: MonadTunnelIO m => MVar s -> m --> m
 mVarRunLocked var ma = mVarRunStateT var $ lift ma
 
 discardingStateTUnlift :: s -> Unlift MonadIO (StateT s)

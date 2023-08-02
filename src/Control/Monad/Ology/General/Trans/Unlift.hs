@@ -20,12 +20,12 @@ class ( MonadTransTunnel t
     -- | Lift with an unlifting function that accounts for the transformer's effects (using MVars where necessary).
     liftWithUnlift ::
            forall m r. MonadIO m
-        => (Unlift MonadTunnelIOInner t -> m r)
+        => (Unlift MonadTunnelIO t -> m r)
         -> t m r
     -- | Return an unlifting function that discards the transformer's effects (such as state change or output).
     getDiscardingUnlift ::
            forall m. Monad m
-        => t m (WUnlift MonadTunnelIOInner t)
+        => t m (WUnlift MonadTunnelIO t)
     getDiscardingUnlift = tunnel $ \unlift -> pure $ pure $ MkWUnlift $ \tma -> fmap mToValue $ unlift tma
 
 toDiscardingUnlift ::
@@ -37,7 +37,7 @@ toDiscardingUnlift run tmr = do
     du tmr
 
 wLiftWithUnlift ::
-       forall t m. (MonadTransUnlift t, MonadTunnelIOInner m)
+       forall t m. (MonadTransUnlift t, MonadTunnelIO m)
     => WBackraised m (t m)
 wLiftWithUnlift = MkWBackraised $ \call -> liftWithUnlift $ \unlift -> call unlift
 
@@ -75,7 +75,7 @@ instance MonadOuter outer => MonadTransUnlift (ComposeOuter outer) where
             return $ call $ extract . unComposeOuter
 
 monoHoist ::
-       forall (t :: TransKind) ma mb a b. (MonadTransUnlift t, MonadTunnelIOInner ma, MonadIO mb)
+       forall (t :: TransKind) ma mb a b. (MonadTransUnlift t, MonadTunnelIO ma, MonadIO mb)
     => (ma a -> mb b)
     -> (t ma a -> t mb b)
 monoHoist f tma = liftWithUnlift $ \unlift -> f $ unlift tma
