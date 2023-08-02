@@ -43,13 +43,12 @@ commuteTWith commutef tabm =
 
 -- | Commute two transformers in a transformer stack.
 commuteT ::
-       forall ta tb m. (MonadTransTunnel ta, MonadTransTunnel tb, Monad (Tunnel ta), MonadInner (Tunnel tb), Monad m)
+       forall ta tb m. (MonadTransTunnel ta, MonadTransTunnel tb, Monad m)
     => ta (tb m) --> tb (ta m)
 commuteT = commuteTWith commuteInner
 
 commuteTBack ::
-       forall ta tb m.
-       (MonadTransTunnel ta, MonadTransTunnel tb, MonadInner (Tunnel ta), MonadInner (Tunnel tb), Monad m)
+       forall ta tb m. (MonadTransTunnel ta, MonadTransTunnel tb, Monad m)
     => ta (tb m) -/-> tb (ta m)
 commuteTBack call = commuteT $ call commuteT
 
@@ -65,12 +64,12 @@ instance MonadTunnelIO IO where
     type TunnelIO IO = Identity
     tunnelIO call = fmap runIdentity $ call $ \ma -> fmap Identity $ ma
 
-instance (MonadTransTunnel t, MonadInner (Tunnel t), MonadTunnelIO m, MonadIO (t m)) => MonadTunnelIO (t m) where
+instance (MonadTransTunnel t, MonadTunnelIO m, MonadIO (t m)) => MonadTunnelIO (t m) where
     type TunnelIO (t m) = ComposeInner (Tunnel t) (TunnelIO m)
     tunnelIO call =
         tunnel $ \unlift -> tunnelIO $ \unliftIO -> fmap unComposeInner $ call $ fmap MkComposeInner . unliftIO . unlift
 
-instance (MonadTransTunnel t, MonadInner (Tunnel t), TransConstraint MonadIO t) => TransConstraint MonadTunnelIO t where
+instance (MonadTransTunnel t, TransConstraint MonadIO t) => TransConstraint MonadTunnelIO t where
     hasTransConstraint = withTransConstraintDict @MonadIO Dict
 
 -- | for use in 'WUnlift', etc.
@@ -78,5 +77,5 @@ class (MonadTunnelIO m, MonadInner (TunnelIO m)) => MonadTunnelIOInner m
 
 instance (MonadTunnelIO m, MonadInner (TunnelIO m)) => MonadTunnelIOInner m
 
-instance (MonadTransTunnel t, MonadInner (Tunnel t), TransConstraint MonadIO t) => TransConstraint MonadTunnelIOInner t where
+instance (MonadTransTunnel t, TransConstraint MonadIO t) => TransConstraint MonadTunnelIOInner t where
     hasTransConstraint = withTransConstraintDict @MonadIO Dict
