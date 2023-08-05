@@ -11,6 +11,11 @@ description: >
   Monadology is intended as a collection of the best ideas in monad-related classes and types,
   with a focus on correctness and elegance, and theoretical understanding, rather than practical performance.
 
+tested-with:
+  - "GHC == 9.2.8"
+  - "GHC == 9.4.5"
+  - "GHC == 9.6.2"
+
 extra-source-files:
   - changelog.md
 

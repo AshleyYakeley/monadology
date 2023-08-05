@@ -1,6 +1,6 @@
 cabal-version: 2.2
 
--- This file has been generated from package.yaml by hpack version 0.35.0.
+-- This file has been generated from package.yaml by hpack version 0.35.2.
 --
 -- see: https://github.com/sol/hpack
 
@@ -15,6 +15,10 @@ copyright:      (c) 2017-2023 Ashley Yakeley
 license:        BSD-2-Clause
 license-file:   LICENSE
 build-type:     Simple
+tested-with:
+    GHC == 9.2.8
+  , GHC == 9.4.5
+  , GHC == 9.6.2
 extra-source-files:
     changelog.md
 
