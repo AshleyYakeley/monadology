@@ -12,7 +12,9 @@ module Control.Monad.Ology.Specific.LifecycleT
     , withLifecycle
     , lifecycleWith
     -- * LifeState
-    , LifeState(..)
+    , LifeState
+    , pattern NoLifeState
+    , lifeStateModify
     , closeLifeState
     , getLifeState
     , addLifeState
@@ -24,18 +26,49 @@ import Control.Monad.Ology.Specific.StateT
 import Import
 
 -- | This represents all the actions that need to be done when closing the lifecycle.
-newtype LifeState = MkLifeState
-    { unLifeState :: Maybe (IO ()) -- special case for empty
-    }
+newtype LifeState =
+    MkLifeState (Maybe (IO (IO Any)))
+
+pattern NoLifeState :: LifeState
+
+pattern NoLifeState = MkLifeState Nothing
+
+lifeStateModify :: (IO --> IO) -> LifeState -> LifeState
+lifeStateModify _ (MkLifeState Nothing) = MkLifeState Nothing
+lifeStateModify m (MkLifeState (Just ioioa)) = MkLifeState $ Just $ m $ fmap m ioioa
+
+closeIOAny :: IO Any -> IO ()
+closeIOAny ioa = do
+    Any b <- ioa
+    if b
+        then closeIOAny ioa
+        else return ()
+
+closeLifeState' :: LifeState -> IO Any
+closeLifeState' (MkLifeState (Just ioioa)) = do
+    ioa <- ioioa
+    closeIOAny ioa
+    return $ Any True
+closeLifeState' (MkLifeState Nothing) = return $ Any False
 
 closeLifeState :: LifeState -> IO ()
-closeLifeState (MkLifeState (Just c)) = c
-closeLifeState (MkLifeState Nothing) = return ()
+closeLifeState ls = do
+    _ <- closeLifeState' ls
+    return ()
+
+varLifeState :: MVar LifeState -> LifeState
+varLifeState var =
+    MkLifeState $
+    Just $
+    return $ do
+        ls <- takeMVar var
+        putMVar var mempty
+        closeLifeState' ls
 
 instance Semigroup LifeState where
     MkLifeState Nothing <> q = q
     p <> MkLifeState Nothing = p
-    MkLifeState (Just p) <> MkLifeState (Just q) = MkLifeState $ Just $ p >> q
+    MkLifeState (Just p) <> MkLifeState (Just q) = MkLifeState $ Just $ p <> q
 
 instance Monoid LifeState where
     mempty = MkLifeState Nothing
@@ -130,6 +163,7 @@ instance MonadTransUnlift LifecycleT where
             f var
 
 addLifeState :: MonadIO m => LifeState -> LifecycleT m ()
+addLifeState (MkLifeState Nothing) = return ()
 addLifeState ls =
     MkLifecycleT $ \var -> do
         dangerousMVarRunStateT var $ do
@@ -138,7 +172,12 @@ addLifeState ls =
 
 -- | Add a closing action.
 lifecycleOnCloseIO :: MonadIO m => IO () -> LifecycleT m ()
-lifecycleOnCloseIO closer = addLifeState $ MkLifeState $ Just closer
+lifecycleOnCloseIO closer =
+    addLifeState $
+    MkLifeState $
+    Just $ do
+        closer
+        return $ return $ Any False
 
 -- | Add a closing action.
 lifecycleOnClose :: MonadAskUnliftIO m => m () -> LifecycleT m ()
@@ -153,10 +192,7 @@ withLifecycle ::
     -> With m a
 withLifecycle (MkLifecycleT f) run = do
     var <- liftIO $ newMVar mempty
-    finally (f var >>= run) $
-        liftIO $ do
-            ls <- takeMVar var
-            closeLifeState ls
+    finally (f var >>= run) $ liftIO $ closeLifeState $ varLifeState var
 
 -- | Run the lifecycle, then close all resources in reverse order they were opened.
 runLifecycle ::
@@ -179,13 +215,7 @@ getLifeState ::
 getLifeState (MkLifecycleT f) = do
     var <- liftIO $ newMVar mempty
     t <- f var
-    let
-        ls =
-            MkLifeState $
-            Just $ do
-                ls0 <- takeMVar var
-                closeLifeState ls0
-    return (t, ls)
+    return (t, varLifeState var)
 
 modifyLifeState ::
        forall m. MonadIO m

@@ -1,3 +1,7 @@
+## [0.3] - ?
+
+- LifecycleT: improve to make more closing more robust
+
 ## [0.2] - 2023-07-31
 
 - fix "Prod" type, add more functions

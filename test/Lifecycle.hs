@@ -40,5 +40,25 @@ testLifecycleWith =
                 liftIO $ appendStr "F"
         runLifecycle lc
 
+testLifeCycleGetState :: TestTree
+testLifeCycleGetState =
+    testCase "with" $
+    compareTest "ACEFDB" $ \appendStr -> do
+        let
+            lc1 :: Lifecycle ()
+            lc1 = do
+                liftIO $ appendStr "A"
+                lifecycleOnClose $ appendStr "B"
+                liftIO $ appendStr "C"
+                lifecycleOnClose $ appendStr "D"
+        ((), ls) <- getLifeState lc1
+        let
+            lc2 :: Lifecycle ()
+            lc2 = do
+                liftIO $ appendStr "E"
+                addLifeState ls
+                liftIO $ appendStr "F"
+        runLifecycle lc2
+
 testLifecycle :: TestTree
-testLifecycle = testGroup "lifecycle" [testLifecycleRun, testLifecycleWith]
+testLifecycle = testGroup "lifecycle" [testLifecycleRun, testLifecycleWith, testLifeCycleGetState]
