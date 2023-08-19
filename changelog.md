@@ -1,6 +1,7 @@
 ## [0.3] - ?
 
-- LifecycleT: improve to make more closing more robust
+- LifecycleT: improve to make closing more robust
+- add bracketNoMask_
 
 ## [0.2] - 2023-07-31
 

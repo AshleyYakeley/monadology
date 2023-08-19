@@ -50,7 +50,7 @@ bracket_ ::
     -> m --> m
 bracket_ before after thing = bracket before (const after) (const thing)
 
--- | Like 'bracket", but doesn\'t mask asynchronous exceptions.
+-- | Like 'bracket', but doesn\'t mask asynchronous exceptions.
 bracketNoMask ::
        forall m a b. MonadException m
     => m a
@@ -63,7 +63,15 @@ bracketNoMask before after thing = do
     after a
     return b
 
--- | Like 'bracketNoMask", but doesn\'t catch any exceptions.
+-- | Variant of 'bracketNoMask'.
+bracketNoMask_ ::
+       forall m. MonadException m
+    => m ()
+    -> m ()
+    -> m --> m
+bracketNoMask_ before after thing = bracketNoMask before (const after) (const thing)
+
+-- | Like 'bracketNoMask', but doesn\'t catch any exceptions.
 bracketFake ::
        forall m a b. Monad m
     => m a
