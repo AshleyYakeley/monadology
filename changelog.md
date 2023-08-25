@@ -1,4 +1,4 @@
-## [0.3] - ?
+## [0.3] - 2023-07-25
 
 - LifecycleT: improve to make closing more robust
 - add bracketNoMask_
