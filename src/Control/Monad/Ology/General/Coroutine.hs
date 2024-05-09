@@ -1,9 +1,7 @@
 module Control.Monad.Ology.General.Coroutine where
 
-import Control.Monad.Ology.General.Trans.Hoist
 import Control.Monad.Ology.General.Trans.Trans
 import Control.Monad.Ology.General.Trans.Tunnel
-import Control.Monad.Ology.General.Trans.Unlift
 import Control.Monad.Ology.Specific.CoroutineT
 import Control.Monad.Ology.Specific.StepT
 import Import
@@ -33,11 +31,8 @@ instance MonadCoroutine IO where
                     putMVar outvar $ Left r
             takeMVar outvar
 
-instance (MonadTransUnlift t, MonadCoroutine m, MonadTunnelIO m, Monad (t m)) => MonadCoroutine (t m) where
-    coroutineSuspend call =
-        MkStepT $
-        liftWithUnlift $ \unlift ->
-            (fmap $ fmap $ fmap $ hoist lift) $ unStepT $ coroutineSuspend $ \pmq -> unlift $ call $ \p -> lift $ pmq p
+instance (MonadTransTunnel t, MonadCoroutine m) => MonadCoroutine (t m) where
+    coroutineSuspend call = underTunnelStepT $ \tun -> coroutineSuspend $ \pmq -> tun $ call $ \p -> lift $ pmq p
 
 -- | A type synoynm for a common pattern for closing opened resources, e.g.
 -- 'System.IO.withFile',

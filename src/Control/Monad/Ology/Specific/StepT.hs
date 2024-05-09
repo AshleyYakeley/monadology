@@ -5,6 +5,7 @@ import Control.Monad.Ology.General.IO
 import Control.Monad.Ology.General.Trans.Constraint
 import Control.Monad.Ology.General.Trans.Hoist
 import Control.Monad.Ology.General.Trans.Trans
+import Control.Monad.Ology.General.Trans.Tunnel
 import Import
 
 -- | A monad that can be run step-by-step until the result.
@@ -48,6 +49,16 @@ instance Functor f => MonadTrans (StepT f) where
 
 instance Functor f => MonadTransHoist (StepT f) where
     hoist f (MkStepT ma) = MkStepT $ (fmap $ fmap $ fmap $ hoist f) $ f ma
+
+underTunnelStepT ::
+       forall t m turn r. (MonadTransTunnel t, Monad m, Functor turn)
+    => ((forall m1 a. Monad m1 => t m1 a -> m1 (Tunnel t a)) -> StepT turn m (Tunnel t r))
+    -> StepT turn (t m) r
+underTunnelStepT call = let
+    conv :: Either (Tunnel t r) (turn (StepT turn m (Tunnel t r))) -> Tunnel t (Either r (turn (StepT turn (t m) r)))
+    conv (Left tr) = fmap Left tr
+    conv (Right turn) = return $ Right $ fmap (\step -> underTunnelStepT $ \_ -> step) turn
+    in MkStepT $ tunnel $ \tun -> fmap conv $ unStepT $ call tun
 
 -- | Run all the steps until done.
 runSteps :: Monad m => Extract f -> StepT f m --> m
