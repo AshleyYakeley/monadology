@@ -24,6 +24,13 @@ tunnelHoist ::
     -> t m1 --> t m2
 tunnelHoist mma sm1 = tunnel $ \tun -> mma $ tun sm1
 
+hoistWith ::
+       forall t m1 m2 f r. (MonadTransTunnel t, Traversable f, Monad m1, Monad m2)
+    => (forall a. m1 a -> m2 (f a))
+    -> t m1 r
+    -> t m2 (f r)
+hoistWith mma sm1 = tunnel $ \tun -> fmap sequenceA $ mma $ tun sm1
+
 backHoist :: (MonadTransTunnel t, Monad ma, Monad mb) => (ma -/-> mb) -> t ma -/-> t mb
 backHoist wt tm = tunnel $ \unlift -> wt $ \tba -> unlift $ tm $ hoist tba
 
@@ -59,6 +66,13 @@ instance MonadInner inner => MonadTransTunnel (ComposeInner inner) where
 class (MonadHoistIO m, MonadInner (TunnelIO m)) => MonadTunnelIO m where
     type TunnelIO m :: Type -> Type
     tunnelIO :: forall r. ((forall a. m a -> IO (TunnelIO m a)) -> IO (TunnelIO m r)) -> m r
+
+hoistWithIO ::
+       forall m f r. (MonadTunnelIO m, Traversable f)
+    => (forall a. IO a -> IO (f a))
+    -> m r
+    -> m (f r)
+hoistWithIO iifa mr = tunnelIO $ \tun -> fmap sequenceA $ iifa $ tun mr
 
 instance MonadTunnelIO IO where
     type TunnelIO IO = Identity
