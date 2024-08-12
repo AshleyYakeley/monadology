@@ -39,6 +39,13 @@ refModifyM ref f = do
 refRestore :: MonadException m => Ref m a -> m --> m
 refRestore ref mr = bracketNoMask (refGet ref) (refPut ref) $ \_ -> mr
 
+-- | Put and restore the original value of this reference after the operation.
+refPutRestore :: MonadException m => Ref m a -> a -> m --> m
+refPutRestore ref a mr =
+    refRestore ref $ do
+        refPut ref a
+        mr
+
 lensMapRef ::
        forall m a b. Monad m
     => Lens' a b
@@ -82,10 +89,7 @@ refParam ::
 refParam ref = let
     paramAsk = refGet ref
     paramWith :: a -> m --> m
-    paramWith a mr =
-        refRestore ref $ do
-            refPut ref a
-            mr
+    paramWith = refPutRestore ref
     in MkParam {..}
 
 -- | Use a reference as a product.
@@ -97,8 +101,7 @@ refProd ref = let
     prodTell a = refModify ref $ (<>) a
     prodCollect :: forall r. m r -> m (r, a)
     prodCollect mr =
-        refRestore ref $ do
-            refPut ref mempty
+        refPutRestore ref mempty $ do
             r <- mr
             a <- refGet ref
             return (r, a)
