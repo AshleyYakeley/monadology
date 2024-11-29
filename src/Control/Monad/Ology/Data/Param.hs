@@ -20,6 +20,13 @@ instance Applicative m => Productable (Param m) where
     rUnit = MkParam (pure ()) (\() -> id)
     pa <***> pb = MkParam (liftA2 (,) (paramAsk pa) (paramAsk pb)) (\(a, b) -> paramWith pa a . paramWith pb b)
 
+paramAsks ::
+       forall m a b. Monad m
+    => Param m a
+    -> (a -> b)
+    -> m b
+paramAsks param ab = fmap ab $ paramAsk param
+
 paramLocalM ::
        forall m a. Monad m
     => Param m a
