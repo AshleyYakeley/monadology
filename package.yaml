@@ -48,12 +48,18 @@ default-extensions:
   - UndecidableSuperClasses
   - ViewPatterns
 ghc-options:
-  - -Wall
-  - -Wincomplete-uni-patterns
-  - -Wincomplete-record-updates
-  - -Wcompat
-  - -Wnoncanonical-monad-instances
+  - -Weverything
+  - -Wno-missing-import-lists
+  - -Wno-missing-export-lists
+  - -Wno-unsafe
+  - -Wno-missing-safe-haskell-mode
+  - -Wno-missing-kind-signatures
   - -Wno-partial-type-signatures
+  - -Wno-monomorphism-restriction
+  - -Wno-missing-local-signatures
+  - -Wno-partial-fields
+  - -Wno-all-missed-specialisations # non-breaking
+  - -Wno-missed-specialisations # non-breaking
 
 library:
   source-dirs: src
@@ -117,7 +123,6 @@ tests:
     source-dirs: test
     dependencies:
       - base >= 4.15 && < 5
-      - transformers >= 0.5
       - text >= 2.0
       - monadology
       - tasty >= 1.4
