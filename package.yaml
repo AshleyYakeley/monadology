@@ -14,9 +14,9 @@ description: >
   with a focus on correctness and elegance, and theoretical understanding, rather than practical performance.
 
 tested-with:
-  - "GHC == 9.2.8"
-  - "GHC == 9.4.5"
-  - "GHC == 9.6.2"
+  - "GHC == 9.6.6"
+  - "GHC == 9.8.3"
+  - "GHC == 9.10.1"
 
 extra-source-files:
   - changelog.md

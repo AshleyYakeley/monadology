@@ -18,9 +18,9 @@ jobs:
         - ubuntu-latest
         # - macOS-latest
         ghc:
-        - "9.2.8"
-        - "9.4.5"
-        - "9.6.2"
+        - "9.6.6"
+        - "9.8.3"
+        - "9.10.1"
 
     runs-on: ${{matrix.os}}
 
