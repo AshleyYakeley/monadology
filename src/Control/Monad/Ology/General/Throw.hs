@@ -6,7 +6,7 @@ module Control.Monad.Ology.General.Throw
     , CE.IOException
     ) where
 
-import qualified Control.Exception as CE
+import Control.Exception qualified as CE
 import Control.Monad.Ology.General.Exception
 import Control.Monad.Ology.Specific.Result
 import Import

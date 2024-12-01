@@ -4,11 +4,11 @@ import Control.Monad.Ology.Data.Param
 import Control.Monad.Ology.Data.Prod
 import Control.Monad.Ology.General
 import Control.Monad.Ology.Specific.StateT
-import qualified Control.Monad.ST.Lazy as Lazy
-import qualified Control.Monad.ST.Strict as Strict
+import Control.Monad.ST.Lazy qualified as Lazy
+import Control.Monad.ST.Strict qualified as Strict
 import Data.IORef
-import qualified Data.STRef.Lazy as Lazy
-import qualified Data.STRef.Strict as Strict
+import Data.STRef.Lazy qualified as Lazy
+import Data.STRef.Strict qualified as Strict
 import Import
 
 -- | A reference of a monad (as in 'StateT').

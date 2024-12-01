@@ -21,48 +21,29 @@ tested-with:
 extra-source-files:
   - changelog.md
 
+language: GHC2021
 default-extensions:
   - AllowAmbiguousTypes
   - Arrows
-  - ConstraintKinds
   - DataKinds
   - DefaultSignatures
-  - EmptyCase
-  - EmptyDataDecls
-  - ExistentialQuantification
-  - FlexibleContexts
-  - FlexibleInstances
-  - ForeignFunctionInterface
+  - DerivingStrategies
   - FunctionalDependencies
-  - GADTs
-  - GeneralizedNewtypeDeriving
   - ImplicitParams
   - NoImplicitPrelude
-  - InstanceSigs
-  - KindSignatures
   - LambdaCase
-  - MultiParamTypeClasses
   - OverloadedLabels
   - OverloadedStrings
   - PartialTypeSignatures
-  - PatternGuards
   - PatternSynonyms
-  - PolyKinds
   - QuantifiedConstraints
-  - RankNTypes
   - RecordWildCards
   - RecursiveDo
   - RoleAnnotations
-  - ScopedTypeVariables
-  - StandaloneDeriving
-  - StandaloneKindSignatures
   - NoStarIsType
   - TemplateHaskell
-  - TypeApplications
   - TypeFamilies
   - TypeFamilyDependencies
-  - TypeOperators
-  - TypeSynonymInstances
   - UndecidableInstances
   - UndecidableSuperClasses
   - ViewPatterns

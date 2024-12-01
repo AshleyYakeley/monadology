@@ -9,7 +9,7 @@ import Control.Monad.Ology.General
 import Control.Monad.Ology.Specific.ReaderT
 import Control.Monad.Ology.Specific.StateT
 import Control.Monad.Trans.Cont hiding (callCC)
-import qualified Control.Monad.Trans.Cont as T
+import Control.Monad.Trans.Cont qualified as T
 import Import
 
 instance TransConstraint Functor (ContT s) where

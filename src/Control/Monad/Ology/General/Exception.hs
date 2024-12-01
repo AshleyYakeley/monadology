@@ -5,7 +5,7 @@ module Control.Monad.Ology.General.Exception
     , CE.evaluate
     ) where
 
-import qualified Control.Exception as CE
+import Control.Exception qualified as CE
 import Control.Monad.Ology.General.Exception.Class
 import Control.Monad.Ology.General.Function
 import Control.Monad.Ology.General.Trans.Hoist

@@ -1,6 +1,6 @@
 cabal-version: 2.2
 
--- This file has been generated from package.yaml by hpack version 0.36.0.
+-- This file has been generated from package.yaml by hpack version 0.37.0.
 --
 -- see: https://github.com/sol/hpack
 
@@ -81,45 +81,25 @@ library
   default-extensions:
       AllowAmbiguousTypes
       Arrows
-      ConstraintKinds
       DataKinds
       DefaultSignatures
-      EmptyCase
-      EmptyDataDecls
-      ExistentialQuantification
-      FlexibleContexts
-      FlexibleInstances
-      ForeignFunctionInterface
+      DerivingStrategies
       FunctionalDependencies
-      GADTs
-      GeneralizedNewtypeDeriving
       ImplicitParams
       NoImplicitPrelude
-      InstanceSigs
-      KindSignatures
       LambdaCase
-      MultiParamTypeClasses
       OverloadedLabels
       OverloadedStrings
       PartialTypeSignatures
-      PatternGuards
       PatternSynonyms
-      PolyKinds
       QuantifiedConstraints
-      RankNTypes
       RecordWildCards
       RecursiveDo
       RoleAnnotations
-      ScopedTypeVariables
-      StandaloneDeriving
-      StandaloneKindSignatures
       NoStarIsType
       TemplateHaskell
-      TypeApplications
       TypeFamilies
       TypeFamilyDependencies
-      TypeOperators
-      TypeSynonymInstances
       UndecidableInstances
       UndecidableSuperClasses
       ViewPatterns
@@ -131,7 +111,7 @@ library
     , transformers >=0.5
     , type-rig >=0.1
     , witness >=0.6.1
-  default-language: Haskell2010
+  default-language: GHC2021
 
 test-suite test
   type: exitcode-stdio-1.0
@@ -148,45 +128,25 @@ test-suite test
   default-extensions:
       AllowAmbiguousTypes
       Arrows
-      ConstraintKinds
       DataKinds
       DefaultSignatures
-      EmptyCase
-      EmptyDataDecls
-      ExistentialQuantification
-      FlexibleContexts
-      FlexibleInstances
-      ForeignFunctionInterface
+      DerivingStrategies
       FunctionalDependencies
-      GADTs
-      GeneralizedNewtypeDeriving
       ImplicitParams
       NoImplicitPrelude
-      InstanceSigs
-      KindSignatures
       LambdaCase
-      MultiParamTypeClasses
       OverloadedLabels
       OverloadedStrings
       PartialTypeSignatures
-      PatternGuards
       PatternSynonyms
-      PolyKinds
       QuantifiedConstraints
-      RankNTypes
       RecordWildCards
       RecursiveDo
       RoleAnnotations
-      ScopedTypeVariables
-      StandaloneDeriving
-      StandaloneKindSignatures
       NoStarIsType
       TemplateHaskell
-      TypeApplications
       TypeFamilies
       TypeFamilyDependencies
-      TypeOperators
-      TypeSynonymInstances
       UndecidableInstances
       UndecidableSuperClasses
       ViewPatterns
@@ -198,4 +158,4 @@ test-suite test
     , tasty-hunit >=0.10
     , text >=2.0
     , transformers >=0.5
-  default-language: Haskell2010
+  default-language: GHC2021
