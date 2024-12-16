@@ -74,7 +74,7 @@ instance Monoid LifeState where
     mempty = MkLifeState Nothing
 
 -- | This is for managing the automatic closing of opened resources.
-newtype LifecycleT m a = MkLifecycleT
+newtype LifecycleT (m :: Type -> Type) (a :: Type) = MkLifecycleT
     { unLifecycleT :: MVar LifeState -> m a
     }
 

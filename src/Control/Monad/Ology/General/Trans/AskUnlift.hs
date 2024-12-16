@@ -3,7 +3,6 @@ module Control.Monad.Ology.General.Trans.AskUnlift where
 import Control.Monad.Ology.General.Extract
 import Control.Monad.Ology.General.Function
 import Control.Monad.Ology.General.IO
-import Control.Monad.Ology.General.Identity
 import Control.Monad.Ology.General.Outer
 import Control.Monad.Ology.General.Trans.Constraint
 import Control.Monad.Ology.General.Trans.Trans
@@ -17,7 +16,7 @@ class MonadTransUnlift t => MonadTransAskUnlift t where
     askUnlift ::
            forall m. Monad m
         => t m (WUnlift Monad t)
-    default askUnlift :: forall m. (MonadIdentity (Tunnel t), Monad m) => t m (WUnlift Monad t)
+    default askUnlift :: forall m. Monad m => t m (WUnlift Monad t)
     askUnlift = tunnel $ \unlift -> pure $ pure $ MkWUnlift $ \tma -> fmap mToValue $ unlift tma
 
 -- | A monad that has no effects over IO (such as state change or output).
@@ -39,7 +38,7 @@ instance MonadTransAskUnlift t => TransConstraint MonadAskUnliftIO t where
     hasTransConstraint =
         withTransConstraintDict @MonadFail $ withTransConstraintDict @MonadIO $ withTransConstraintDict @MonadFix $ Dict
 
-instance MonadOuter outer => MonadTransAskUnlift (ComposeOuter outer)
+instance forall outer. MonadOuter outer => MonadTransAskUnlift (ComposeOuter outer)
 
 contractT ::
        forall (t :: TransKind) m. (MonadTransAskUnlift t, Monad m)

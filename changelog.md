@@ -1,5 +1,6 @@
-## UNRELEASES
+## [0.4] - UNRELEASED
 
+- fix for GHC 9.8, 9.10
 - add refPutRestore
 
 ## [0.3] - 2023-07-25

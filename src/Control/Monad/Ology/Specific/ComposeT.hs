@@ -16,7 +16,7 @@ import Import
 type ComposeT :: TransKind -> TransKind -> TransKind
 newtype ComposeT (outerT :: TransKind) (innerT :: TransKind) (m :: Type -> Type) (a :: Type) = MkComposeT
     { unComposeT :: outerT (innerT m) a
-    } deriving (Functor, Applicative, Alternative, Monad, MonadFail, MonadIO, MonadFix, MonadPlus)
+    } deriving newtype (Functor, Applicative, Alternative, Monad, MonadFail, MonadIO, MonadFix, MonadPlus)
 
 liftOuterComposeT ::
        forall outerT innerT m a. (MonadTransTunnel outerT, MonadTrans innerT, TransConstraint Monad innerT, Monad m)
@@ -53,14 +53,14 @@ liftInnerComposeTWithUnlift call =
         Dict -> MkComposeT $ liftWithUnlift $ \unlift -> call $ \(MkComposeT ttma) -> unlift ttma
 
 composeTUnlift ::
-       forall c outerT innerT. (MonadTransUnlift innerT, TransConstraint c innerT)
+       forall c outerT innerT. TransConstraint c innerT
     => Unlift c outerT
     -> Unlift c innerT
     -> Unlift c (ComposeT outerT innerT)
 composeTUnlift ua ub (MkComposeT tatbma) = ub $ withTransConstraintTM @c $ ua tatbma
 
 composeTWUnlift ::
-       forall c outerT innerT. (MonadTransUnlift innerT, TransConstraint c innerT)
+       forall c outerT innerT. TransConstraint c innerT
     => WUnlift c outerT
     -> WUnlift c innerT
     -> WUnlift c (ComposeT outerT innerT)
@@ -103,7 +103,7 @@ instance (TransConstraint Monad outerT, TransConstraint Monad innerT) => TransCo
                 case hasTransConstraint @Monad @outerT @(innerT m) of
                     Dict -> Dict
 
-instance (TransConstraint MonadIO outerT, TransConstraint Monad innerT, TransConstraint MonadIO innerT) =>
+instance (TransConstraint MonadIO outerT, TransConstraint MonadIO innerT) =>
              TransConstraint MonadIO (ComposeT outerT innerT) where
     hasTransConstraint ::
            forall m. MonadIO m
@@ -114,7 +114,7 @@ instance (TransConstraint MonadIO outerT, TransConstraint Monad innerT, TransCon
                 case hasTransConstraint @MonadIO @outerT @(innerT m) of
                     Dict -> Dict
 
-instance (TransConstraint MonadFail outerT, TransConstraint Monad innerT, TransConstraint MonadFail innerT) =>
+instance (TransConstraint MonadFail outerT, TransConstraint MonadFail innerT) =>
              TransConstraint MonadFail (ComposeT outerT innerT) where
     hasTransConstraint ::
            forall m. MonadFail m
@@ -125,7 +125,7 @@ instance (TransConstraint MonadFail outerT, TransConstraint Monad innerT, TransC
                 case hasTransConstraint @MonadFail @outerT @(innerT m) of
                     Dict -> Dict
 
-instance (TransConstraint MonadFix outerT, TransConstraint Monad innerT, TransConstraint MonadFix innerT) =>
+instance (TransConstraint MonadFix outerT, TransConstraint MonadFix innerT) =>
              TransConstraint MonadFix (ComposeT outerT innerT) where
     hasTransConstraint ::
            forall m. MonadFix m
@@ -136,7 +136,7 @@ instance (TransConstraint MonadFix outerT, TransConstraint Monad innerT, TransCo
                 case hasTransConstraint @MonadFix @outerT @(innerT m) of
                     Dict -> Dict
 
-instance (TransConstraint MonadPlus outerT, TransConstraint Monad innerT, TransConstraint MonadPlus innerT) =>
+instance (TransConstraint MonadPlus outerT, TransConstraint MonadPlus innerT) =>
              TransConstraint MonadPlus (ComposeT outerT innerT) where
     hasTransConstraint ::
            forall m. MonadPlus m

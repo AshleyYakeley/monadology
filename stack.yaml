@@ -1,10 +1,10 @@
-resolver: lts-21.6
+resolver: lts-23.0
 packages: [.]
 ghc-options:
     "$locals": -Werror
 
 extra-deps:
-- invariant-0.6
-- countable-1.2
-- witness-0.6.1
-- type-rig-0.1
+#- invariant-0.6
+#- countable-1.2
+- witness-0.7
+#- type-rig-0.1

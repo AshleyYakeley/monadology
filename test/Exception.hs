@@ -64,7 +64,7 @@ data Info = forall m e. (MonadCatch e m, MonadIO m, Eq e, Show e) =>
 
 newtype TestExc =
     MkTestExc Int
-    deriving (Eq, Show)
+    deriving newtype (Eq, Show)
 
 instance Exception TestExc
 

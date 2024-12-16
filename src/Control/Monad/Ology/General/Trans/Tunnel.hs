@@ -59,7 +59,7 @@ commuteTBack ::
     => ta (tb m) -/-> tb (ta m)
 commuteTBack call = commuteT $ call commuteT
 
-instance MonadInner inner => MonadTransTunnel (ComposeInner inner) where
+instance forall inner. MonadInner inner => MonadTransTunnel (ComposeInner inner) where
     type Tunnel (ComposeInner inner) = inner
     tunnel call = MkComposeInner $ call unComposeInner
 

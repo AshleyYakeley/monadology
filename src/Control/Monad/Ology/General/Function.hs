@@ -30,6 +30,7 @@ type TransKind = (Type -> Type) -> (Type -> Type)
 type Raised :: forall k. (k -> Type) -> (k -> Type) -> Type
 type Raised p q = forall a. p a -> q a
 
+type (-->) :: forall k. (k -> Type) -> (k -> Type) -> Type
 type p --> q = Raised p q
 
 type WRaised :: forall k. (k -> Type) -> (k -> Type) -> Type
@@ -50,6 +51,7 @@ instance Category WRaised where
 type Backraised :: forall k. (k -> Type) -> (k -> Type) -> Type
 type Backraised ma mb = forall r. ((mb --> ma) -> ma r) -> mb r
 
+type (-/->) :: forall k. (k -> Type) -> (k -> Type) -> Type
 type ma -/-> mb = Backraised ma mb
 
 backraisedToRaised :: (ma -/-> mb) -> ma --> mb

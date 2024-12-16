@@ -5,7 +5,7 @@ cabal-version: 2.2
 -- see: https://github.com/sol/hpack
 
 name:           monadology
-version:        0.3
+version:        0.4
 synopsis:       The best ideas in monad-related classes and types.
 description:    Monadology is intended as a collection of the best ideas in monad-related classes and types, with a focus on correctness and elegance, and theoretical understanding, rather than practical performance.
 category:       Monads
@@ -13,12 +13,13 @@ homepage:       https://github.com/AshleyYakeley/monadology#readme
 bug-reports:    https://github.com/AshleyYakeley/monadology/issues
 author:         Ashley Yakeley
 maintainer:     <ashley@semantic.org>
-copyright:      (c) 2017-2023 Ashley Yakeley
+copyright:      (c) 2017-2024 Ashley Yakeley
 license:        BSD-2-Clause
 license-file:   LICENSE
 build-type:     Simple
 tested-with:
-    GHC == 9.6.6
+    GHC == 9.8.4
+  , GHC == 9.10.1
 extra-source-files:
     changelog.md
 
@@ -96,19 +97,20 @@ library
       RoleAnnotations
       NoStarIsType
       TemplateHaskell
+      TypeAbstractions
       TypeFamilies
       TypeFamilyDependencies
       UndecidableInstances
       UndecidableSuperClasses
       ViewPatterns
-  ghc-options: -Weverything -Wno-missing-import-lists -Wno-missing-export-lists -Wno-unsafe -Wno-missing-safe-haskell-mode -Wno-missing-kind-signatures -Wno-partial-type-signatures -Wno-monomorphism-restriction -Wno-missing-local-signatures -Wno-partial-fields -Wno-all-missed-specialisations -Wno-missed-specialisations
+  ghc-options: -Weverything -Wno-missing-import-lists -Wno-missing-export-lists -Wno-unsafe -Wno-missing-safe-haskell-mode -Wno-missing-kind-signatures -Wno-partial-type-signatures -Wno-missing-role-annotations -Wno-monomorphism-restriction -Wno-missing-local-signatures -Wno-partial-fields -Wno-all-missed-specialisations -Wno-missed-specialisations
   build-depends:
-      base >=4.15 && <5
-    , constraints >=0.13
+      base >=4.19 && <5
+    , constraints >=0.14
     , invariant >=0.6
-    , transformers >=0.5
+    , transformers >=0.6
     , type-rig >=0.1
-    , witness >=0.6.1
+    , witness >=0.7
   default-language: GHC2021
 
 test-suite test
@@ -143,14 +145,15 @@ test-suite test
       RoleAnnotations
       NoStarIsType
       TemplateHaskell
+      TypeAbstractions
       TypeFamilies
       TypeFamilyDependencies
       UndecidableInstances
       UndecidableSuperClasses
       ViewPatterns
-  ghc-options: -Weverything -Wno-missing-import-lists -Wno-missing-export-lists -Wno-unsafe -Wno-missing-safe-haskell-mode -Wno-missing-kind-signatures -Wno-partial-type-signatures -Wno-monomorphism-restriction -Wno-missing-local-signatures -Wno-partial-fields -Wno-all-missed-specialisations -Wno-missed-specialisations -threaded
+  ghc-options: -Weverything -Wno-missing-import-lists -Wno-missing-export-lists -Wno-unsafe -Wno-missing-safe-haskell-mode -Wno-missing-kind-signatures -Wno-partial-type-signatures -Wno-missing-role-annotations -Wno-monomorphism-restriction -Wno-missing-local-signatures -Wno-partial-fields -Wno-all-missed-specialisations -Wno-missed-specialisations -threaded
   build-depends:
-      base >=4.15 && <5
+      base >=4.19 && <5
     , monadology
     , tasty >=1.4
     , tasty-hunit >=0.10

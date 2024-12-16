@@ -41,7 +41,7 @@ wLiftWithUnlift ::
     => WBackraised m (t m)
 wLiftWithUnlift = MkWBackraised $ \call -> liftWithUnlift $ \unlift -> call unlift
 
-composeUnliftRaised :: (MonadTransUnlift t, MonadUnliftIO m) => Unlift Functor t -> (m --> n) -> (t m --> n)
+composeUnliftRaised :: MonadUnliftIO m => Unlift Functor t -> (m --> n) -> (t m --> n)
 composeUnliftRaised rt rm tma = rm $ rt tma
 
 composeUnliftRaisedCommute ::
@@ -68,7 +68,7 @@ instance MonadTransUnlift t => TransConstraint MonadUnliftIO t where
     hasTransConstraint =
         withTransConstraintDict @MonadFail $ withTransConstraintDict @MonadIO $ withTransConstraintDict @MonadFix $ Dict
 
-instance MonadOuter outer => MonadTransUnlift (ComposeOuter outer) where
+instance forall outer. MonadOuter outer => MonadTransUnlift (ComposeOuter outer) where
     liftWithUnlift call =
         MkComposeOuter $ do
             MkWExtract extract <- getExtract

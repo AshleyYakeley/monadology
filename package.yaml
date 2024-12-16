@@ -1,7 +1,7 @@
 name: monadology
-version: 0.3
+version: "0.4"
 author: Ashley Yakeley
-copyright: (c) 2017-2023 Ashley Yakeley
+copyright: (c) 2017-2024 Ashley Yakeley
 license: BSD-2-Clause
 license-file: LICENSE
 maintainer: <ashley@semantic.org>
@@ -10,65 +10,68 @@ github: "AshleyYakeley/monadology"
 category: Monads
 synopsis: The best ideas in monad-related classes and types.
 description: >
-  Monadology is intended as a collection of the best ideas in monad-related classes and types,
-  with a focus on correctness and elegance, and theoretical understanding, rather than practical performance.
+    Monadology is intended as a collection of the best ideas in monad-related classes and types,
+    with a focus on correctness and elegance, and theoretical understanding, rather than practical performance.
 
 tested-with:
-  - "GHC == 9.6.6"
+- "GHC == 9.8.4"
+- "GHC == 9.10.1"
 
 extra-source-files:
-  - changelog.md
+- changelog.md
 
 language: GHC2021
 default-extensions:
-  - AllowAmbiguousTypes
-  - Arrows
-  - DataKinds
-  - DefaultSignatures
-  - DerivingStrategies
-  - FunctionalDependencies
-  - ImplicitParams
-  - NoImplicitPrelude
-  - LambdaCase
-  - OverloadedLabels
-  - OverloadedStrings
-  - PartialTypeSignatures
-  - PatternSynonyms
-  - QuantifiedConstraints
-  - RecordWildCards
-  - RecursiveDo
-  - RoleAnnotations
-  - NoStarIsType
-  - TemplateHaskell
-  - TypeFamilies
-  - TypeFamilyDependencies
-  - UndecidableInstances
-  - UndecidableSuperClasses
-  - ViewPatterns
+- AllowAmbiguousTypes
+- Arrows
+- DataKinds
+- DefaultSignatures
+- DerivingStrategies
+- FunctionalDependencies
+- ImplicitParams
+- NoImplicitPrelude
+- LambdaCase
+- OverloadedLabels
+- OverloadedStrings
+- PartialTypeSignatures
+- PatternSynonyms
+- QuantifiedConstraints
+- RecordWildCards
+- RecursiveDo
+- RoleAnnotations
+- NoStarIsType
+- TemplateHaskell
+- TypeAbstractions
+- TypeFamilies
+- TypeFamilyDependencies
+- UndecidableInstances
+- UndecidableSuperClasses
+- ViewPatterns
 ghc-options:
-  - -Weverything
-  - -Wno-missing-import-lists
-  - -Wno-missing-export-lists
-  - -Wno-unsafe
-  - -Wno-missing-safe-haskell-mode
-  - -Wno-missing-kind-signatures
-  - -Wno-partial-type-signatures
-  - -Wno-monomorphism-restriction
-  - -Wno-missing-local-signatures
-  - -Wno-partial-fields
-  - -Wno-all-missed-specialisations # non-breaking
-  - -Wno-missed-specialisations # non-breaking
+- -Weverything
+- -Wno-missing-import-lists
+- -Wno-missing-export-lists
+- -Wno-unsafe
+- -Wno-missing-safe-haskell-mode
+- -Wno-missing-kind-signatures
+- -Wno-partial-type-signatures
+- -Wno-missing-role-annotations
+- -Wno-monomorphism-restriction
+- -Wno-missing-local-signatures
+- -Wno-partial-fields
+- -Wno-all-missed-specialisations # non-breaking
+- -Wno-missed-specialisations # non-breaking
 
 library:
-  source-dirs: src
-  dependencies:
-    - base >= 4.15 && < 5
-    - constraints >= 0.13
-    - transformers >= 0.5
-    - witness >= 0.6.1
+    source-dirs: src
+    dependencies:
+    - base >= 4.19 && < 5
+    - constraints >= 0.14
+    - transformers >= 0.6
+    - witness >= 0.7
     - invariant >= 0.6
     - type-rig >= 0.1
-  exposed-modules:
+    exposed-modules:
     - Control.Monad.Ology.Specific.Result
     - Control.Monad.Ology.General.IO
     - Control.Monad.Ology.General.Function
@@ -112,25 +115,25 @@ library:
     - Control.Monad.Ology.Data.Ref
     - Control.Monad.Ology.Data
     - Control.Monad.Ology
-  other-modules:
+    other-modules:
     - Control.Monad.Ology.General.Exception.Class
     - Import
 
 tests:
-  test:
-    source-dirs: test
-    dependencies:
-      - base >= 4.15 && < 5
-      - text >= 2.0
-      - monadology
-      - tasty >= 1.4
-      - tasty-hunit >= 0.10
-    main: Main.hs
-    other-modules:
-      - Useful
-      - Exception
-      - Compose
-      - Coroutine
-      - Lifecycle
-      - Data
-    ghc-options: -threaded
+    test:
+        source-dirs: test
+        dependencies:
+        - base >= 4.19 && < 5
+        - text >= 2.0
+        - monadology
+        - tasty >= 1.4
+        - tasty-hunit >= 0.10
+        main: Main.hs
+        other-modules:
+        - Useful
+        - Exception
+        - Compose
+        - Coroutine
+        - Lifecycle
+        - Data
+        ghc-options: -threaded

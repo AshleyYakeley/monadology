@@ -29,7 +29,7 @@ resultFromMaybe e Nothing = FailureResult e
 maybeToM :: MonadFail m => String -> Maybe a -> m a
 maybeToM e = resultToM . resultFromMaybe e
 
-deriving instance (Eq e, Eq a) => Eq (Result e a)
+deriving stock instance (Eq e, Eq a) => Eq (Result e a)
 
 instance Functor (Result e) where
     fmap ab (SuccessResult a) = SuccessResult (ab a)

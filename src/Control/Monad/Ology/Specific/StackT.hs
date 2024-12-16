@@ -76,8 +76,7 @@ instance (IsStack (TransConstraint Monad) tt) => TransConstraint Monad (StackT t
 instance (IsStack (TransConstraint Monad) tt, IsStack MonadTrans tt, MonadFail m) => MonadFail (StackT tt m) where
     fail s = lift $ fail s
 
-instance (IsStack (TransConstraint Monad) tt, IsStack (TransConstraint MonadFail) tt, IsStack MonadTrans tt) =>
-             TransConstraint MonadFail (StackT tt) where
+instance (IsStack (TransConstraint Monad) tt, IsStack MonadTrans tt) => TransConstraint MonadFail (StackT tt) where
     hasTransConstraint = Dict
 
 instance (IsStack (TransConstraint Monad) tt, IsStack (TransConstraint MonadFix) tt, MonadFix m) =>
@@ -254,7 +253,6 @@ instance (IsStack (WithTunnelConstraint Functor) tt, IsStack (WithTunnelConstrai
 instance ( IsStack (WithTunnelConstraint Functor) tt
          , IsStack (WithTunnelConstraint MonadInner) tt
          , IsStack (WithTunnelConstraint MonadExtract) tt
-         , IsStack MonadTransUnlift tt
          ) => MonadExtract (StackTunnel tt) where
     mToValue =
         case isWithTunnelConstraint @MonadExtract @tt of
