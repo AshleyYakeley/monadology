@@ -1,4 +1,4 @@
-## [0.4] - UNRELEASED
+## [0.4] - 2024-12-15
 
 - fix for GHC 9.8, 9.10
 - add refPutRestore
