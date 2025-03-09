@@ -21,9 +21,10 @@ instance MonadCoroutine IO where
                 forkIO $ do
                     r <-
                         action $ \p -> do
-                            putMVar outvar $
-                                Right $
-                                MkTurn p $ \q ->
+                            putMVar outvar
+                                $ Right
+                                $ MkTurn p
+                                $ \q ->
                                     MkStepT $ do
                                         putMVar invar q
                                         takeMVar outvar
@@ -41,9 +42,10 @@ instance (MonadTransTunnel t, MonadCoroutine m) => MonadCoroutine (t m) where
 type With (m :: k -> Type) (t :: Type) = forall (r :: k). (t -> m r) -> m r
 
 unpickWith ::
-       forall m a. MonadCoroutine m
-    => With m a
-    -> m (a, m ())
+    forall m a.
+    MonadCoroutine m =>
+    With m a ->
+    m (a, m ())
 unpickWith w = do
     etp <- unStepT $ coroutineSuspend w
     case etp of
@@ -51,9 +53,10 @@ unpickWith w = do
         Right (MkTurn a f) -> return (a, fmap (\_ -> ()) $ runCoroutine $ f a)
 
 pickWith ::
-       forall m a. Monad m
-    => m (a, m ())
-    -> With m a
+    forall m a.
+    Monad m =>
+    m (a, m ()) ->
+    With m a
 pickWith mac amr = do
     (a, closer) <- mac
     r <- amr a

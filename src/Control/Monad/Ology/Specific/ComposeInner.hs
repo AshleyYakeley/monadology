@@ -35,15 +35,20 @@ instance forall inner. Functor inner => TransConstraint Functor (ComposeInner in
 
 instance forall inner outer. (MonadInner inner, Monad outer) => Applicative (ComposeInner inner outer) where
     pure a = MkComposeInner $ pure $ pure a
+
     -- cannot use obvious definition for <*>, because that would incorrectly execute the outer part of ma even if mab fails
     mab <*> ma = do
         ab <- mab
         a <- ma
         return $ ab a
 
-instance forall inner outer. (MonadInner inner, Monad outer, Alternative inner) =>
-             Alternative (ComposeInner inner outer) where
+instance
+    forall inner outer.
+    (MonadInner inner, Monad outer, Alternative inner) =>
+    Alternative (ComposeInner inner outer)
+    where
     empty = MkComposeInner $ pure empty
+
     -- cannot use obvious definition for <|> for similar reasons as in <*>
     (MkComposeInner oia) <|> cb = do
         ma <-
@@ -86,8 +91,11 @@ instance forall inner outer. (MonadInner inner, MonadInner outer) => MonadInner 
 instance forall inner. MonadInner inner => TransConstraint MonadInner (ComposeInner inner) where
     hasTransConstraint = Dict
 
-instance forall inner outer. (MonadInner inner, MonadOuter inner, MonadOuter outer) =>
-             MonadOuter (ComposeInner inner outer) where
+instance
+    forall inner outer.
+    (MonadInner inner, MonadOuter inner, MonadOuter outer) =>
+    MonadOuter (ComposeInner inner outer)
+    where
     getExtract =
         MkComposeInner $ do
             MkWExtract oaa <- getExtract
@@ -100,13 +108,14 @@ instance forall inner. (MonadInner inner, MonadOuter inner) => TransConstraint M
 
 instance forall inner outer. (MonadInner inner, MonadFix outer) => MonadFix (ComposeInner inner outer) where
     mfix ama =
-        MkComposeInner $
-        mfix $ \ia ->
-            unComposeInner $
-            ama $
-            case retrieveInner ia of
-                SuccessResult a -> a
-                FailureResult _ -> error "bad ComposeInner mfix"
+        MkComposeInner
+            $ mfix
+            $ \ia ->
+                unComposeInner
+                    $ ama
+                    $ case retrieveInner ia of
+                        SuccessResult a -> a
+                        FailureResult _ -> error "bad ComposeInner mfix"
 
 instance forall inner. MonadInner inner => TransConstraint MonadFix (ComposeInner inner) where
     hasTransConstraint = Dict
@@ -131,12 +140,16 @@ instance forall inner. MonadInner inner => TransConstraint MonadIO (ComposeInner
     hasTransConstraint = Dict
 
 liftInner ::
-       forall inner outer. Applicative outer
-    => inner --> ComposeInner inner outer
+    forall inner outer.
+    Applicative outer =>
+    inner --> ComposeInner inner outer
 liftInner na = MkComposeInner $ pure na
 
-instance forall inner m. (MonadInner inner, MonadException inner, MonadException m) =>
-             MonadException (ComposeInner inner m) where
+instance
+    forall inner m.
+    (MonadInner inner, MonadException inner, MonadException m) =>
+    MonadException (ComposeInner inner m)
+    where
     type Exc (ComposeInner inner m) = Either (Exc inner) (Exc m)
     throwExc (Left e) = liftInner $ throwExc e
     throwExc (Right e) = lift $ throwExc e

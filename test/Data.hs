@@ -1,12 +1,14 @@
 module Data
     ( testData
-    ) where
+    )
+where
 
-import Control.Monad.Ology
 import Data.Text
-import Prelude
 import Test.Tasty
 import Test.Tasty.HUnit
+import Prelude
+
+import Control.Monad.Ology
 
 lensFst :: Lens' (a, b) a
 lensFst afa (a, b) = fmap (\a' -> (a', b)) $ afa a

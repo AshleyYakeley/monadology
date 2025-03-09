@@ -1,12 +1,14 @@
 module Control.Monad.Ology.General.Throw
     ( module Control.Monad.Ology.General.Throw
-    , CE.Exception(..)
+    , CE.Exception (..)
     , CE.ErrorCall
     , pattern CE.ErrorCall
     , CE.IOException
-    ) where
+    )
+where
 
 import Control.Exception qualified as CE
+
 import Control.Monad.Ology.General.Exception
 import Control.Monad.Ology.Specific.Result
 import Import
@@ -19,8 +21,9 @@ instance CE.Exception e => MonadThrow e IO where
     throw e = throwExc $ CE.toException e
 
 fromResult ::
-       forall m e a. MonadThrow e m
-    => Result e a
-    -> m a
+    forall m e a.
+    MonadThrow e m =>
+    Result e a ->
+    m a
 fromResult (SuccessResult a) = return a
 fromResult (FailureResult e) = throw e

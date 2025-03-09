@@ -36,15 +36,17 @@ instance MonadInner (Result e) where
     retrieveInner ra = ra
 
 mToMaybe ::
-       forall m a. MonadInner m
-    => m a
-    -> Maybe a
+    forall m a.
+    MonadInner m =>
+    m a ->
+    Maybe a
 mToMaybe = resultToMaybe . retrieveInner
 
 commuteInner ::
-       forall m f a. (MonadInner m, Applicative f)
-    => m (f a)
-    -> f (m a)
+    forall m f a.
+    (MonadInner m, Applicative f) =>
+    m (f a) ->
+    f (m a)
 commuteInner mfa =
     case retrieveInner mfa of
         SuccessResult fa -> fmap pure fa

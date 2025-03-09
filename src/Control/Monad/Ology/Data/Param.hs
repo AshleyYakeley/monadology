@@ -21,34 +21,38 @@ instance Applicative m => Productable (Param m) where
     pa <***> pb = MkParam (liftA2 (,) (paramAsk pa) (paramAsk pb)) (\(a, b) -> paramWith pa a . paramWith pb b)
 
 paramAsks ::
-       forall m a b. Monad m
-    => Param m a
-    -> (a -> b)
-    -> m b
+    forall m a b.
+    Monad m =>
+    Param m a ->
+    (a -> b) ->
+    m b
 paramAsks param ab = fmap ab $ paramAsk param
 
 paramLocalM ::
-       forall m a. Monad m
-    => Param m a
-    -> (a -> m a)
-    -> m --> m
+    forall m a.
+    Monad m =>
+    Param m a ->
+    (a -> m a) ->
+    m --> m
 paramLocalM param f mr = do
     a <- paramAsk param
     a' <- f a
     paramWith param a' mr
 
 paramLocal ::
-       forall m a. Monad m
-    => Param m a
-    -> (a -> a)
-    -> m --> m
+    forall m a.
+    Monad m =>
+    Param m a ->
+    (a -> a) ->
+    m --> m
 paramLocal param f mr = paramLocalM param (return . f) mr
 
 lensMapParam ::
-       forall m a b. Monad m
-    => Lens' a b
-    -> Param m a
-    -> Param m b
+    forall m a b.
+    Monad m =>
+    Lens' a b ->
+    Param m a ->
+    Param m b
 lensMapParam l param = let
     paramAsk' = fmap (\a -> getConst $ l Const a) $ paramAsk param
     paramWith' :: b -> m --> m
@@ -61,6 +65,7 @@ liftParam :: (MonadTransTunnel t, Monad m) => Param m --> Param (t m)
 liftParam (MkParam a l) = MkParam (lift a) $ \aa -> hoist $ l aa
 
 readerParam ::
-       forall m r. Monad m
-    => Param (ReaderT r m) r
+    forall m r.
+    Monad m =>
+    Param (ReaderT r m) r
 readerParam = MkParam ask $ \r -> with r

@@ -13,17 +13,19 @@ runResultT = unComposeInner
 
 -- | Throw the parameterised exception type.
 throwR ::
-       forall m e a. Monad m
-    => e
-    -> ResultT e m a
+    forall m e a.
+    Monad m =>
+    e ->
+    ResultT e m a
 throwR e = liftInner $ throwExc e
 
 -- | Catch the parameterised exception type.
 catchR ::
-       forall m e e' a. Monad m
-    => ResultT e m a
-    -> (e -> ResultT e' m a)
-    -> ResultT e' m a
+    forall m e e' a.
+    Monad m =>
+    ResultT e m a ->
+    (e -> ResultT e' m a) ->
+    ResultT e' m a
 catchR (MkComposeInner rma) handler =
     MkComposeInner $ do
         rea <- rma
@@ -32,6 +34,7 @@ catchR (MkComposeInner rma) handler =
             FailureResult e -> unComposeInner $ handler e
 
 resultExn ::
-       forall m e. Monad m
-    => Exn (ResultT e m) e
+    forall m e.
+    Monad m =>
+    Exn (ResultT e m) e
 resultExn = MkExn throwR catchR

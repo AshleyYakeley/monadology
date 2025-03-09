@@ -1,14 +1,15 @@
 module Control.Monad.Ology.Data.Ref where
 
-import Control.Monad.Ology.Data.Param
-import Control.Monad.Ology.Data.Prod
-import Control.Monad.Ology.General
-import Control.Monad.Ology.Specific.StateT
 import Control.Monad.ST.Lazy qualified as Lazy
 import Control.Monad.ST.Strict qualified as Strict
 import Data.IORef
 import Data.STRef.Lazy qualified as Lazy
 import Data.STRef.Strict qualified as Strict
+
+import Control.Monad.Ology.Data.Param
+import Control.Monad.Ology.Data.Prod
+import Control.Monad.Ology.General
+import Control.Monad.Ology.Specific.StateT
 import Import
 
 -- | A reference of a monad (as in 'StateT').
@@ -47,10 +48,11 @@ refPutRestore ref a mr =
         mr
 
 lensMapRef ::
-       forall m a b. Monad m
-    => Lens' a b
-    -> Ref m a
-    -> Ref m b
+    forall m a b.
+    Monad m =>
+    Lens' a b ->
+    Ref m a ->
+    Ref m b
 lensMapRef l ref = let
     refGet' = fmap (\a -> getConst $ l Const a) $ refGet ref
     refPut' b = do
@@ -83,20 +85,22 @@ lazySTRef r = MkRef (Lazy.readSTRef r) (Lazy.writeSTRef r)
 
 -- | Use a reference as a parameter.
 refParam ::
-       forall m a. MonadException m
-    => Ref m a
-    -> Param m a
+    forall m a.
+    MonadException m =>
+    Ref m a ->
+    Param m a
 refParam ref = let
     paramAsk = refGet ref
     paramWith :: a -> m --> m
     paramWith = refPutRestore ref
-    in MkParam {..}
+    in MkParam{..}
 
 -- | Use a reference as a product.
 refProd ::
-       forall m a. (MonadException m, Monoid a)
-    => Ref m a
-    -> Prod m a
+    forall m a.
+    (MonadException m, Monoid a) =>
+    Ref m a ->
+    Prod m a
 refProd ref = let
     prodTell a = refModify ref $ (<>) a
     prodCollect :: forall r. m r -> m (r, a)
@@ -105,4 +109,4 @@ refProd ref = let
             r <- mr
             a <- refGet ref
             return (r, a)
-    in MkProd {..}
+    in MkProd{..}

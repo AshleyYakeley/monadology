@@ -3,11 +3,13 @@
 module Control.Monad.Ology.Specific.ExceptT
     ( module Control.Monad.Trans.Except
     , module Control.Monad.Ology.Specific.ExceptT
-    ) where
+    )
+where
+
+import Control.Monad.Trans.Except hiding (liftCallCC, liftListen, liftPass)
 
 import Control.Monad.Ology.General
 import Control.Monad.Ology.Specific.Result
-import Control.Monad.Trans.Except hiding (liftCallCC, liftListen, liftPass)
 import Import
 
 instance TransConstraint Functor (ExceptT e) where
@@ -70,9 +72,10 @@ instance MonadCatch ex m => MonadCatch (Either e ex) (ExceptT e m) where
                 SuccessResult (Right a) -> return $ return a
 
 transExcept ::
-       forall t m e a. (MonadTransTunnel t, Monad m)
-    => t (ExceptT e m) a
-    -> t m (Either e a)
+    forall t m e a.
+    (MonadTransTunnel t, Monad m) =>
+    t (ExceptT e m) a ->
+    t m (Either e a)
 transExcept tema = tunnel $ \unlift -> fmap commuteInner $ runExceptT $ unlift tema
 
 instance MonadTransHoist (ExceptT e) where

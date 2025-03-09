@@ -3,13 +3,15 @@
 module Control.Monad.Ology.Specific.ContT
     ( module Control.Monad.Trans.Cont
     , module Control.Monad.Ology.Specific.ContT
-    ) where
+    )
+where
+
+import Control.Monad.Trans.Cont hiding (callCC)
+import Control.Monad.Trans.Cont qualified as T
 
 import Control.Monad.Ology.General
 import Control.Monad.Ology.Specific.ReaderT
 import Control.Monad.Ology.Specific.StateT
-import Control.Monad.Trans.Cont hiding (callCC)
-import Control.Monad.Trans.Cont qualified as T
 import Import
 
 instance TransConstraint Functor (ContT s) where

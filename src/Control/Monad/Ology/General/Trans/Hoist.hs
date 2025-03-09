@@ -10,9 +10,10 @@ import Import
 type MonadTransHoist :: TransKind -> Constraint
 class (MonadTrans t, TransConstraint Monad t) => MonadTransHoist t where
     hoist ::
-           forall m1 m2. (Monad m1, Monad m2)
-        => (m1 --> m2)
-        -> t m1 --> t m2
+        forall m1 m2.
+        (Monad m1, Monad m2) =>
+        (m1 --> m2) ->
+        t m1 --> t m2
 
 hoistTransform :: (MonadTransHoist t, Monad m1, Monad m2) => (m1 --> m2) -> WRaised (t m2) --> WRaised (t m1)
 hoistTransform ff (MkWRaised r2) = MkWRaised $ \m1a -> r2 $ hoist ff m1a

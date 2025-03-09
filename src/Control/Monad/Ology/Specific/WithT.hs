@@ -47,8 +47,7 @@ instance Monoid a => Monoid (WithT m a) where
 instance MonadFix m => MonadFix (WithT m) where
     mfix ama =
         MkWithT $ \amr -> do
-            rec
-                (~(olda, r')) <-
+            rec (~(olda, r')) <-
                     unWithT (ama olda) $ \newa -> do
                         r <- amr newa
                         return (newa, r)
@@ -66,15 +65,17 @@ instance MonadCatch e m => MonadCatch e (WithT m) where
     catch (MkWithT afrfr) cc = MkWithT $ \afr -> catch (afrfr afr) $ \e -> unWithT (cc e) afr
 
 unpickWithT ::
-       forall m a. MonadCoroutine m
-    => WithT m a
-    -> m (a, m ())
+    forall m a.
+    MonadCoroutine m =>
+    WithT m a ->
+    m (a, m ())
 unpickWithT (MkWithT w) = unpickWith w
 
 pickWithT ::
-       forall m a. Monad m
-    => m (a, m ())
-    -> WithT m a
+    forall m a.
+    Monad m =>
+    m (a, m ()) ->
+    WithT m a
 pickWithT mm = MkWithT $ pickWith mm
 
 instance {-# OVERLAPPING #-} (MonadHoistIO m, MonadCoroutine m) => MonadHoistIO (WithT m) where
@@ -100,8 +101,9 @@ execMapWithT ffa =
         aff af
 
 withParamRef ::
-       forall m. Monad m
-    => Param m --> Ref (WithT m)
+    forall m.
+    Monad m =>
+    Param m --> Ref (WithT m)
 withParamRef (param :: _ a) = let
     refGet :: WithT m a
     refGet =
@@ -110,9 +112,10 @@ withParamRef (param :: _ a) = let
             afr a
     refPut :: a -> WithT m ()
     refPut a = MkWithT $ \ufr -> paramWith param a $ ufr ()
-    in MkRef {..}
+    in MkRef{..}
 
 liftWithT ::
-       forall t m. (MonadTransUnlift t, MonadTunnelIO m)
-    => WithT m --> WithT (t m)
+    forall t m.
+    (MonadTransUnlift t, MonadTunnelIO m) =>
+    WithT m --> WithT (t m)
 liftWithT (MkWithT aff) = MkWithT $ \atf -> liftWithUnlift $ \unlift -> aff $ unlift . atf

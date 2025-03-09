@@ -3,10 +3,12 @@
 module Control.Monad.Ology.Specific.StateT
     ( module Control.Monad.Trans.State
     , module Control.Monad.Ology.Specific.StateT
-    ) where
+    )
+where
+
+import Control.Monad.Trans.State hiding (liftCallCC, liftCatch, liftListen, liftPass)
 
 import Control.Monad.Ology.General
-import Control.Monad.Trans.State hiding (liftCallCC, liftCatch, liftListen, liftPass)
 import Import
 
 instance TransConstraint Functor (StateT s) where
@@ -57,8 +59,9 @@ instance MonadTransTunnel (StateT s) where
     type Tunnel (StateT s) = (,) (Endo s)
     tunnel call =
         StateT $ \olds ->
-            fmap (\(Endo sf, r) -> (r, sf olds)) $
-            call $ \(StateT smrs) -> fmap (\(a, s) -> (Endo $ pure s, a)) $ smrs olds
+            fmap (\(Endo sf, r) -> (r, sf olds))
+                $ call
+                $ \(StateT smrs) -> fmap (\(a, s) -> (Endo $ pure s, a)) $ smrs olds
 
 instance MonadTransUnlift (StateT s) where
     liftWithUnlift call = liftWithMVarStateT $ \var -> call $ mVarRunStateT var

@@ -1,6 +1,7 @@
 module Control.Monad.Ology.General.Catch where
 
 import Control.Exception qualified as CE
+
 import Control.Monad.Ology.General.Exception
 import Control.Monad.Ology.General.Throw
 import Control.Monad.Ology.Specific.Result
@@ -10,16 +11,19 @@ import Import
 class MonadThrow e m => MonadCatch e m where
     catch :: forall a. m a -> (e -> m a) -> m a
 
-try :: forall m e a. MonadCatch e m
-    => m a
-    -> m (Result e a)
+try ::
+    forall m e a.
+    MonadCatch e m =>
+    m a ->
+    m (Result e a)
 try ma = catch (fmap SuccessResult ma) $ \e -> return $ FailureResult e
 
 handle ::
-       forall m e a. MonadCatch e m
-    => (e -> m a)
-    -> m a
-    -> m a
+    forall m e a.
+    MonadCatch e m =>
+    (e -> m a) ->
+    m a ->
+    m a
 handle handler ma = catch ma handler
 
 instance CE.Exception e => MonadCatch e IO where

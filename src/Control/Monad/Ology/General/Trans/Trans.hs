@@ -1,5 +1,6 @@
 module Control.Monad.Ology.General.Trans.Trans
     ( module I
-    ) where
+    )
+where
 
 import Control.Monad.Trans.Class as I

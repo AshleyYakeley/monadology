@@ -1,5 +1,5 @@
 module Control.Monad.Ology.Specific.LifecycleT
-    ( LifecycleT(..)
+    ( LifecycleT (..)
     , Lifecycle
     , runLifecycle
     , lifecycleOnCloseIO
@@ -7,11 +7,13 @@ module Control.Monad.Ology.Specific.LifecycleT
     , lifecycleGetCloser
     , forkLifecycle
     , lifecycleMonitor
-    -- * With
+
+      -- * With
     , With
     , withLifecycle
     , lifecycleWith
-    -- * LifeState
+
+      -- * LifeState
     , LifeState
     , pattern NoLifeState
     , lifeStateModify
@@ -19,18 +21,18 @@ module Control.Monad.Ology.Specific.LifecycleT
     , getLifeState
     , addLifeState
     , modifyLifeState
-    ) where
+    )
+where
 
 import Control.Monad.Ology.General
 import Control.Monad.Ology.Specific.StateT
 import Import
 
 -- | This represents all the actions that need to be done when closing the lifecycle.
-newtype LifeState =
-    MkLifeState (Maybe (IO (IO Any)))
+newtype LifeState
+    = MkLifeState (Maybe (IO (IO Any)))
 
 pattern NoLifeState :: LifeState
-
 pattern NoLifeState = MkLifeState Nothing
 
 lifeStateModify :: (IO --> IO) -> LifeState -> LifeState
@@ -58,12 +60,13 @@ closeLifeState ls = do
 
 varLifeState :: MVar LifeState -> LifeState
 varLifeState var =
-    MkLifeState $
-    Just $
-    return $ do
-        ls <- takeMVar var
-        putMVar var mempty
-        closeLifeState' ls
+    MkLifeState
+        $ Just
+        $ return
+        $ do
+            ls <- takeMVar var
+            putMVar var mempty
+            closeLifeState' ls
 
 instance Semigroup LifeState where
     MkLifeState Nothing <> q = q
@@ -149,18 +152,20 @@ instance MonadTransHoist LifecycleT where
 instance MonadTransTunnel LifecycleT where
     type Tunnel LifecycleT = Identity
     tunnel ::
-           forall m r. Monad m
-        => ((forall m1 a. Monad m1 => LifecycleT m1 a -> m1 (Identity a)) -> m (Identity r))
-        -> LifecycleT m r
+        forall m r.
+        Monad m =>
+        ((forall m1 a. Monad m1 => LifecycleT m1 a -> m1 (Identity a)) -> m (Identity r)) ->
+        LifecycleT m r
     tunnel f = MkLifecycleT $ \var -> fmap runIdentity $ f $ \a -> fmap Identity $ unLifecycleT a var
 
 instance MonadTransUnlift LifecycleT where
     liftWithUnlift call = MkLifecycleT $ \var -> call $ \(MkLifecycleT f) -> f var
     getDiscardingUnlift =
-        return $
-        MkWUnlift $ \(MkLifecycleT f) -> do
-            var <- liftIO $ newMVar mempty
-            f var
+        return
+            $ MkWUnlift
+            $ \(MkLifecycleT f) -> do
+                var <- liftIO $ newMVar mempty
+                f var
 
 addLifeState :: MonadIO m => LifeState -> LifecycleT m ()
 addLifeState (MkLifeState Nothing) = return ()
@@ -173,11 +178,12 @@ addLifeState ls =
 -- | Add a closing action.
 lifecycleOnCloseIO :: MonadIO m => IO () -> LifecycleT m ()
 lifecycleOnCloseIO closer =
-    addLifeState $
-    MkLifeState $
-    Just $ do
-        closer
-        return $ return $ Any False
+    addLifeState
+        $ MkLifeState
+        $ Just
+        $ do
+            closer
+            return $ return $ Any False
 
 -- | Add a closing action.
 lifecycleOnClose :: MonadAskUnliftIO m => m () -> LifecycleT m ()
@@ -187,17 +193,19 @@ lifecycleOnClose closer = do
 
 -- | Convert a lifecycle to a function that uses the \"with\" pattern.
 withLifecycle ::
-       forall m a. (MonadException m, MonadTunnelIO m)
-    => LifecycleT m a
-    -> With m a
+    forall m a.
+    (MonadException m, MonadTunnelIO m) =>
+    LifecycleT m a ->
+    With m a
 withLifecycle (MkLifecycleT f) run = do
     var <- liftIO $ newMVar mempty
     finally (f var >>= run) $ liftIO $ closeLifeState $ varLifeState var
 
 -- | Run the lifecycle, then close all resources in reverse order they were opened.
 runLifecycle ::
-       forall m. (MonadException m, MonadTunnelIO m)
-    => LifecycleT m --> m
+    forall m.
+    (MonadException m, MonadTunnelIO m) =>
+    LifecycleT m --> m
 runLifecycle lc = withLifecycle lc return
 
 -- | Fork a thread that will complete in this lifecycle. Closing will wait for the thread to finish.
@@ -209,18 +217,20 @@ forkLifecycle action = do
 
 -- | Runs a lifecycle, but instead of running the closing actions, return them as a 'LifeState'.
 getLifeState ::
-       forall m a. MonadIO m
-    => LifecycleT m a
-    -> m (a, LifeState)
+    forall m a.
+    MonadIO m =>
+    LifecycleT m a ->
+    m (a, LifeState)
 getLifeState (MkLifecycleT f) = do
     var <- liftIO $ newMVar mempty
     t <- f var
     return (t, varLifeState var)
 
 modifyLifeState ::
-       forall m. MonadIO m
-    => (LifeState -> LifeState)
-    -> LifecycleT m --> LifecycleT m
+    forall m.
+    MonadIO m =>
+    (LifeState -> LifeState) ->
+    LifecycleT m --> LifecycleT m
 modifyLifeState ss la = do
     (a, ls) <- lift $ getLifeState la
     addLifeState $ ss ls
@@ -232,9 +242,10 @@ modifyLifeState ss la = do
 -- The closer is an idempotent action that will close the lifecycle only if it hasn't already been closed.
 -- The closer will also be run as the closer of the resulting lifecycle.
 lifecycleGetCloser ::
-       forall m a. MonadIO m
-    => LifecycleT m a
-    -> LifecycleT m (a, IO ())
+    forall m a.
+    MonadIO m =>
+    LifecycleT m a ->
+    LifecycleT m (a, IO ())
 lifecycleGetCloser lc = do
     (a, ls) <- lift $ getLifeState lc
     var <- liftIO $ newMVar ()

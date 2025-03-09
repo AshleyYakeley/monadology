@@ -2,11 +2,13 @@
 
 module Control.Monad.Ology.Specific.MaybeT
     ( module Control.Monad.Trans.Maybe
-    ) where
+    )
+where
+
+import Control.Monad.Trans.Maybe hiding (liftCallCC, liftCatch, liftListen, liftPass)
 
 import Control.Monad.Ology.General
 import Control.Monad.Ology.Specific.Result
-import Control.Monad.Trans.Maybe hiding (liftCallCC, liftCatch, liftListen, liftPass)
 import Import
 
 instance TransConstraint Functor MaybeT where

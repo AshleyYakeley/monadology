@@ -3,10 +3,12 @@
 module Control.Monad.Ology.Specific.IdentityT
     ( module Control.Monad.Trans.Identity
     , module Control.Monad.Ology.Specific.IdentityT
-    ) where
+    )
+where
+
+import Control.Monad.Trans.Identity hiding (liftCallCC, liftCatch)
 
 import Control.Monad.Ology.General
-import Control.Monad.Trans.Identity hiding (liftCallCC, liftCatch)
 import Import
 
 instance TransConstraint Functor IdentityT where

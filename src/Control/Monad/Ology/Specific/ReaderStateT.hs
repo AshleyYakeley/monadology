@@ -21,8 +21,9 @@ readerStateUpdate :: Monad m => (f --> f) -> ReaderStateT f m ()
 readerStateUpdate ff = modify (\fm -> fm . MkWRaised ff)
 
 readerStateParamRef ::
-       forall f m. Monad m
-    => Param f --> Ref (ReaderStateT f m)
+    forall f m.
+    Monad m =>
+    Param f --> Ref (ReaderStateT f m)
 readerStateParamRef (param :: _ a) = let
     refGet :: ReaderStateT f m a
     refGet = do
@@ -30,4 +31,4 @@ readerStateParamRef (param :: _ a) = let
         lift $ ff $ paramAsk param
     refPut :: a -> ReaderStateT f m ()
     refPut a = readerStateUpdate $ paramWith param a
-    in MkRef {..}
+    in MkRef{..}

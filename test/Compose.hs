@@ -1,13 +1,15 @@
 module Compose
     ( testComposeInner
-    ) where
+    )
+where
 
 import Control.Applicative
-import Control.Monad.Ology
 import Data.IORef
-import Prelude
 import Test.Tasty
 import Test.Tasty.HUnit
+import Prelude
+
+import Control.Monad.Ology
 
 testComposeInnerApplicative :: TestTree
 testComposeInnerApplicative =

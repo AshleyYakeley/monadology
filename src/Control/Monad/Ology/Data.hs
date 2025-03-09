@@ -1,6 +1,7 @@
 module Control.Monad.Ology.Data
     ( module I
-    ) where
+    )
+where
 
 import Control.Monad.Ology.Data.Exn as I
 import Control.Monad.Ology.Data.Param as I

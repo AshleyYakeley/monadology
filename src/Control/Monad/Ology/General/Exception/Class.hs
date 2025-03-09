@@ -1,6 +1,7 @@
 module Control.Monad.Ology.General.Exception.Class where
 
 import Control.Exception qualified as CE
+
 import Control.Monad.Ology.Specific.Result
 import Import
 
@@ -8,6 +9,7 @@ import Import
 class Monad m => MonadException m where
     -- | The type of /all/ exceptions of this monad.
     type Exc m :: Type
+
     throwExc :: Exc m -> m a
     catchExc :: m a -> (Exc m -> m a) -> m a
 
@@ -57,33 +59,37 @@ instance MonadException IO where
 
 -- | Catch all exceptions, optionally returning or re-throwing.
 catchSomeExc ::
-       forall m a. MonadException m
-    => m a
-    -> (Exc m -> m (Maybe a))
-    -> m a
+    forall m a.
+    MonadException m =>
+    m a ->
+    (Exc m -> m (Maybe a)) ->
+    m a
 catchSomeExc ma handler = catchExc ma $ \e -> handler e >>= maybe (throwExc e) return
 
 fromResultExc ::
-       forall m a. MonadException m
-    => Result (Exc m) a
-    -> m a
+    forall m a.
+    MonadException m =>
+    Result (Exc m) a ->
+    m a
 fromResultExc (SuccessResult a) = return a
 fromResultExc (FailureResult e) = throwExc e
 
 -- | Catch all exceptions as a 'Result'.
 tryExc ::
-       forall m a. MonadException m
-    => m a
-    -> m (Result (Exc m) a)
+    forall m a.
+    MonadException m =>
+    m a ->
+    m (Result (Exc m) a)
 tryExc ma = catchExc (fmap SuccessResult ma) $ \e -> return $ FailureResult e
 
 -- | Run the handler on exception.
 -- Does not mask asynchronous exceptions on the handler.
 onException ::
-       forall m a. MonadException m
-    => m a
-    -> m ()
-    -> m a
+    forall m a.
+    MonadException m =>
+    m a ->
+    m () ->
+    m a
 onException ma handler = catchExc ma $ \ex -> handler >> throwExc ex
 
 -- | This catches certain "bottom values".

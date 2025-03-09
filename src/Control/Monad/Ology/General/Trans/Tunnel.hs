@@ -13,22 +13,26 @@ type MonadTransTunnel :: TransKind -> Constraint
 class (MonadTransHoist t, MonadInner (Tunnel t)) => MonadTransTunnel t where
     -- | The tunnel monad of this transformer.
     type Tunnel t :: Type -> Type
+
     tunnel ::
-           forall m r. Monad m
-        => ((forall m1 a. Monad m1 => t m1 a -> m1 (Tunnel t a)) -> m (Tunnel t r))
-        -> t m r
+        forall m r.
+        Monad m =>
+        ((forall m1 a. Monad m1 => t m1 a -> m1 (Tunnel t a)) -> m (Tunnel t r)) ->
+        t m r
 
 tunnelHoist ::
-       forall t m1 m2. (MonadTransTunnel t, Monad m1, Monad m2)
-    => (m1 --> m2)
-    -> t m1 --> t m2
+    forall t m1 m2.
+    (MonadTransTunnel t, Monad m1, Monad m2) =>
+    (m1 --> m2) ->
+    t m1 --> t m2
 tunnelHoist mma sm1 = tunnel $ \tun -> mma $ tun sm1
 
 hoistWith ::
-       forall t m1 m2 f r. (MonadTransTunnel t, Traversable f, Monad m1, Monad m2)
-    => (forall a. m1 a -> m2 (f a))
-    -> t m1 r
-    -> t m2 (f r)
+    forall t m1 m2 f r.
+    (MonadTransTunnel t, Traversable f, Monad m1, Monad m2) =>
+    (forall a. m1 a -> m2 (f a)) ->
+    t m1 r ->
+    t m2 (f r)
 hoistWith mma sm1 = tunnel $ \tun -> fmap sequenceA $ mma $ tun sm1
 
 backHoist :: (MonadTransTunnel t, Monad ma, Monad mb) => (ma -/-> mb) -> t ma -/-> t mb
@@ -39,9 +43,10 @@ wBackHoist (MkWBackraised f) = MkWBackraised $ backHoist f
 
 -- | Commute two transformers in a transformer stack, by commuting their tunnel monads.
 commuteTWith ::
-       forall ta tb m. (MonadTransTunnel ta, MonadTransTunnel tb, Monad m)
-    => (forall r. Tunnel tb (Tunnel ta r) -> Tunnel ta (Tunnel tb r))
-    -> ta (tb m) --> tb (ta m)
+    forall ta tb m.
+    (MonadTransTunnel ta, MonadTransTunnel tb, Monad m) =>
+    (forall r. Tunnel tb (Tunnel ta r) -> Tunnel ta (Tunnel tb r)) ->
+    ta (tb m) --> tb (ta m)
 commuteTWith commutef tabm =
     case hasTransConstraint @Monad @ta @m of
         Dict ->
@@ -50,13 +55,15 @@ commuteTWith commutef tabm =
 
 -- | Commute two transformers in a transformer stack.
 commuteT ::
-       forall ta tb m. (MonadTransTunnel ta, MonadTransTunnel tb, Monad m)
-    => ta (tb m) --> tb (ta m)
+    forall ta tb m.
+    (MonadTransTunnel ta, MonadTransTunnel tb, Monad m) =>
+    ta (tb m) --> tb (ta m)
 commuteT = commuteTWith commuteInner
 
 commuteTBack ::
-       forall ta tb m. (MonadTransTunnel ta, MonadTransTunnel tb, Monad m)
-    => ta (tb m) -/-> tb (ta m)
+    forall ta tb m.
+    (MonadTransTunnel ta, MonadTransTunnel tb, Monad m) =>
+    ta (tb m) -/-> tb (ta m)
 commuteTBack call = commuteT $ call commuteT
 
 instance forall inner. MonadInner inner => MonadTransTunnel (ComposeInner inner) where
@@ -68,10 +75,11 @@ class (MonadHoistIO m, MonadInner (TunnelIO m)) => MonadTunnelIO m where
     tunnelIO :: forall r. ((forall a. m a -> IO (TunnelIO m a)) -> IO (TunnelIO m r)) -> m r
 
 hoistWithIO ::
-       forall m f r. (MonadTunnelIO m, Traversable f)
-    => (forall a. IO a -> IO (f a))
-    -> m r
-    -> m (f r)
+    forall m f r.
+    (MonadTunnelIO m, Traversable f) =>
+    (forall a. IO a -> IO (f a)) ->
+    m r ->
+    m (f r)
 hoistWithIO iifa mr = tunnelIO $ \tun -> fmap sequenceA $ iifa $ tun mr
 
 instance MonadTunnelIO IO where

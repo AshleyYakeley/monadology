@@ -55,10 +55,11 @@ prodCensorItems :: (Monad f, Monad m) => Prod m (f a) -> (a -> f a) -> m --> m
 prodCensorItems p afa = prodCensor p $ \fa -> fa >>= afa
 
 lensMapProd ::
-       forall m a b. (Monad m, Monoid a, Monoid b)
-    => Lens' a b
-    -> Prod m a
-    -> Prod m b
+    forall m a b.
+    (Monad m, Monoid a, Monoid b) =>
+    Lens' a b ->
+    Prod m a ->
+    Prod m b
 lensMapProd l p = let
     prodTell' :: b -> m ()
     prodTell' b = prodTell p $ runIdentity $ l (\_ -> Identity b) mempty
@@ -74,12 +75,13 @@ liftProd (MkProd t l) =
     MkProd (\a -> lift $ t a) $ \tmr -> tunnel $ \unlift -> fmap (\(tun, a) -> fmap (\r -> (r, a)) tun) $ l $ unlift tmr
 
 writerProd :: (Monad m, Monoid w) => Prod (WriterT w m) w
-writerProd = MkProd {prodTell = tell, prodCollect = collect}
+writerProd = MkProd{prodTell = tell, prodCollect = collect}
 
 foldProd ::
-       forall f m a. (Applicative f, Foldable f, Applicative m)
-    => Prod m a
-    -> Prod m (f a)
+    forall f m a.
+    (Applicative f, Foldable f, Applicative m) =>
+    Prod m a ->
+    Prod m (f a)
 foldProd (MkProd prodTell prodCollect) = let
     prodTell' :: f a -> m ()
     prodTell' aa = for_ aa prodTell

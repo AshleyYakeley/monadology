@@ -1,8 +1,8 @@
 module Useful where
 
 import Data.IORef
-import Prelude
 import Test.Tasty.HUnit
+import Prelude
 
 compareTest :: String -> ((String -> IO ()) -> IO r) -> IO r
 compareTest expected action = do

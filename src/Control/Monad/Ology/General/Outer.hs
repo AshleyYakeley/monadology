@@ -20,9 +20,10 @@ instance MonadOuter ((->) r) where
     getExtract r = MkWExtract $ \ra -> ra r
 
 commuteOuter ::
-       forall m f a. (MonadOuter m, Functor f)
-    => f (m a)
-    -> m (f a)
+    forall m f a.
+    (MonadOuter m, Functor f) =>
+    f (m a) ->
+    m (f a)
 commuteOuter fma = do
     MkWExtract ext <- getExtract
     return $ fmap ext fma

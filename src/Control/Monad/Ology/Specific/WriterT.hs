@@ -3,10 +3,12 @@
 module Control.Monad.Ology.Specific.WriterT
     ( module Control.Monad.Trans.Writer
     , module Control.Monad.Ology.Specific.WriterT
-    ) where
+    )
+where
+
+import Control.Monad.Trans.Writer hiding (liftCallCC, liftCatch)
 
 import Control.Monad.Ology.General
-import Control.Monad.Trans.Writer hiding (liftCallCC, liftCatch)
 import Import
 
 collect :: (Monad m, Monoid w) => WriterT w m a -> WriterT w m (a, w)
@@ -82,11 +84,12 @@ instance Monoid w => MonadTransUnlift (WriterT w) where
     liftWithUnlift call = do
         var <- liftIO $ newMVar mempty
         r <-
-            lift $
-            call $ \(WriterT mrs) -> do
-                (r, output) <- mrs
-                liftIO $ modifyMVar_ var $ \oldoutput -> return $ mappend oldoutput output
-                return r
+            lift
+                $ call
+                $ \(WriterT mrs) -> do
+                    (r, output) <- mrs
+                    liftIO $ modifyMVar_ var $ \oldoutput -> return $ mappend oldoutput output
+                    return r
         totaloutput <- liftIO $ takeMVar var
         tell totaloutput
         return r

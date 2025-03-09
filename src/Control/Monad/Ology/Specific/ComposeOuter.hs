@@ -51,8 +51,9 @@ instance forall outer. MonadOuter outer => TransConstraint Monad (ComposeOuter o
     hasTransConstraint = Dict
 
 liftOuter ::
-       forall outer inner. (Functor outer, Applicative inner)
-    => outer --> ComposeOuter outer inner
+    forall outer inner.
+    (Functor outer, Applicative inner) =>
+    outer --> ComposeOuter outer inner
 liftOuter oa = MkComposeOuter $ fmap pure oa
 
 instance forall outer. MonadOuter outer => MonadTrans (ComposeOuter outer) where

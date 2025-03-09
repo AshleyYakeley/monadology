@@ -3,9 +3,10 @@ module Control.Monad.Ology.Specific.CoroutineT where
 import Control.Monad.Ology.Specific.StepT
 import Import
 
-data Turn p q a =
-    MkTurn p
-           (q -> a)
+data Turn p q a
+    = MkTurn
+        p
+        (q -> a)
 
 instance Functor (Turn p q) where
     fmap ab (MkTurn p qa) = MkTurn p $ fmap ab qa

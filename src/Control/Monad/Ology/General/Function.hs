@@ -1,25 +1,30 @@
 module Control.Monad.Ology.General.Function
     ( TransKind
-    -- * Raised
+
+      -- * Raised
     , Raised
     , type (-->)
-    , WRaised(..)
+    , WRaised (..)
     , wLift
     , wLiftIO
-    -- * Backraised
+
+      -- * Backraised
     , Backraised
     , type (-/->)
     , backraisedToRaised
-    , WBackraised(..)
+    , WBackraised (..)
     , wBackraisedToWRaised
-    -- * Unlift
+
+      -- * Unlift
     , Unlift
-    , WUnlift(..)
+    , WUnlift (..)
     , wUnliftToWRaised
-    -- * Extract
+
+      -- * Extract
     , Extract
-    , WExtract(..)
-    ) where
+    , WExtract (..)
+    )
+where
 
 import Control.Monad.Ology.General.IO
 import Control.Monad.Ology.General.Trans.Trans

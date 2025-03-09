@@ -1,6 +1,7 @@
 module Control.Monad.Ology.General
     ( module I
-    ) where
+    )
+where
 
 import Control.Monad.Ology.General.Catch as I
 import Control.Monad.Ology.General.Cont as I

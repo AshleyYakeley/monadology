@@ -51,9 +51,10 @@ instance Functor f => MonadTransHoist (StepT f) where
     hoist f (MkStepT ma) = MkStepT $ (fmap $ fmap $ fmap $ hoist f) $ f ma
 
 underTunnelStepT ::
-       forall t m turn r. (MonadTransTunnel t, Monad m, Functor turn)
-    => ((forall m1 a. Monad m1 => t m1 a -> m1 (Tunnel t a)) -> StepT turn m (Tunnel t r))
-    -> StepT turn (t m) r
+    forall t m turn r.
+    (MonadTransTunnel t, Monad m, Functor turn) =>
+    ((forall m1 a. Monad m1 => t m1 a -> m1 (Tunnel t a)) -> StepT turn m (Tunnel t r)) ->
+    StepT turn (t m) r
 underTunnelStepT call = let
     conv :: Either (Tunnel t r) (turn (StepT turn m (Tunnel t r))) -> Tunnel t (Either r (turn (StepT turn (t m) r)))
     conv (Left tr) = fmap Left tr
