@@ -1,5 +1,7 @@
 ## [0.5] - UNRELEASED
 
+- instance MonadException ComposeT
+
 ## [0.4] - 2024-12-15
 
 - fix for GHC 9.8, 9.10

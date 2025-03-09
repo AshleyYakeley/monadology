@@ -18,7 +18,7 @@ type ComposeT :: TransKind -> TransKind -> TransKind
 newtype ComposeT (outerT :: TransKind) (innerT :: TransKind) (m :: Type -> Type) (a :: Type) = MkComposeT
     { unComposeT :: outerT (innerT m) a
     }
-    deriving newtype (Functor, Applicative, Alternative, Monad, MonadFail, MonadIO, MonadFix, MonadPlus)
+    deriving newtype (Functor, Applicative, Alternative, Monad, MonadException, MonadFail, MonadIO, MonadFix, MonadPlus)
 
 liftOuterComposeT ::
     forall outerT innerT m a.
