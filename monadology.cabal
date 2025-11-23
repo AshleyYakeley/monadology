@@ -7,7 +7,7 @@ cabal-version: 2.2
 name:           monadology
 version:        0.5
 synopsis:       The best ideas in monad-related classes and types.
-description:    Monadology is intended as a collection of the best ideas in monad-related classes and types, with a focus on correctness and elegance, and theoretical understanding, rather than practical performance.
+description:    Monadology is a collection of the best ideas in monad-related classes and types.
 category:       Monads
 homepage:       https://github.com/AshleyYakeley/monadology#readme
 bug-reports:    https://github.com/AshleyYakeley/monadology/issues
