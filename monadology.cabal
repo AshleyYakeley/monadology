@@ -35,6 +35,7 @@ library
       Control.Monad.Ology.General.Cont
       Control.Monad.Ology.General.Inner
       Control.Monad.Ology.General.Outer
+      Control.Monad.Ology.General.Commute
       Control.Monad.Ology.General.Extract
       Control.Monad.Ology.General.Identity
       Control.Monad.Ology.General.Exception
@@ -49,6 +50,7 @@ library
       Control.Monad.Ology.General.Trans.Unlift
       Control.Monad.Ology.General.Trans.AskUnlift
       Control.Monad.Ology.General
+      Control.Monad.Ology.Specific.ComposeCommute
       Control.Monad.Ology.Specific.ComposeInner
       Control.Monad.Ology.Specific.ComposeOuter
       Control.Monad.Ology.Specific.IdentityT
@@ -106,7 +108,9 @@ library
   ghc-options: -Weverything -Wno-missing-import-lists -Wno-missing-export-lists -Wno-unsafe -Wno-missing-safe-haskell-mode -Wno-missing-kind-signatures -Wno-partial-type-signatures -Wno-missing-role-annotations -Wno-monomorphism-restriction -Wno-missing-local-signatures -Wno-partial-fields -Wno-all-missed-specialisations -Wno-missed-specialisations
   build-depends:
       base >=4.19 && <5
+    , commutative-semigroups >=0.2
     , constraints >=0.14
+    , countable >=0.8
     , invariant >=0.6
     , transformers >=0.6
     , type-rig >=0.1

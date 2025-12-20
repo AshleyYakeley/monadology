@@ -4,6 +4,7 @@ module Control.Monad.Ology.General
 where
 
 import Control.Monad.Ology.General.Catch as I
+import Control.Monad.Ology.General.Commute as I
 import Control.Monad.Ology.General.Cont as I
 import Control.Monad.Ology.General.Coroutine as I
 import Control.Monad.Ology.General.Exception as I

@@ -5,6 +5,7 @@ where
 
 import Control.Monad.Ology.Data as I
 import Control.Monad.Ology.General as I
+import Control.Monad.Ology.Specific.ComposeCommute as I
 import Control.Monad.Ology.Specific.ComposeInner as I
 import Control.Monad.Ology.Specific.ComposeOuter as I
 import Control.Monad.Ology.Specific.ComposeT as I

@@ -67,6 +67,8 @@ library:
     - base >= 4.19 && < 5
     - constraints >= 0.14
     - transformers >= 0.6
+    - commutative-semigroups >= 0.2
+    - countable >= 0.8
     - witness >= 0.7
     - invariant >= 0.6
     - type-rig >= 0.1
@@ -77,6 +79,7 @@ library:
     - Control.Monad.Ology.General.Cont
     - Control.Monad.Ology.General.Inner
     - Control.Monad.Ology.General.Outer
+    - Control.Monad.Ology.General.Commute
     - Control.Monad.Ology.General.Extract
     - Control.Monad.Ology.General.Identity
     - Control.Monad.Ology.General.Exception
@@ -91,6 +94,7 @@ library:
     - Control.Monad.Ology.General.Trans.Unlift
     - Control.Monad.Ology.General.Trans.AskUnlift
     - Control.Monad.Ology.General
+    - Control.Monad.Ology.Specific.ComposeCommute
     - Control.Monad.Ology.Specific.ComposeInner
     - Control.Monad.Ology.Specific.ComposeOuter
     - Control.Monad.Ology.Specific.IdentityT
