@@ -13,7 +13,7 @@ import Exception
 import Lifecycle
 
 tests :: TestTree
-tests = testGroup "monadology" [testCoroutine, testLifecycle, testComposeInner, testException, testData]
+tests = testGroup "monadology" [testCoroutine, testLifecycle, testCompose, testException, testData]
 
 main :: IO ()
 main = defaultMain tests

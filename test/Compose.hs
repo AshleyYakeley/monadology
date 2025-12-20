@@ -1,10 +1,13 @@
+{-# OPTIONS -fno-warn-orphans #-}
 module Compose
-    ( testComposeInner
+    ( testCompose
     )
 where
 
 import Control.Applicative
+import Data.Functor.Identity
 import Data.IORef
+import Data.Subsingular
 import Test.Tasty
 import Test.Tasty.HUnit
 import Prelude
@@ -46,4 +49,34 @@ testComposeInnerAlternative =
         assertEqual "v2" False v2
 
 testComposeInner :: TestTree
-testComposeInner = testGroup "composeInner" [testComposeInnerApplicative, testComposeInnerAlternative]
+testComposeInner = testGroup "inner" [testComposeInnerApplicative, testComposeInnerAlternative]
+
+-- this is false
+instance Subsingular Char where
+    subsingle = Just 'A'
+
+type M = WriterT String Identity
+
+type C = ComposeCommute M []
+
+execC :: C a -> String
+execC ca = runIdentity $ execWriterT $ unComposeCommute ca
+
+m :: C ()
+m = MkComposeCommute $ return [(), ()]
+
+g :: C ()
+g = MkComposeCommute $ tell "G" >> return [()]
+
+h :: C ()
+h = MkComposeCommute $ tell "H" >> return [()]
+
+testComposeCommute :: TestTree
+testComposeCommute = testCase "Commute" $ do
+    let
+        r1 = execC $ (m >> g) >> h
+        r2 = execC $ m >> (g >> h)
+    assertBool "" $ r1 /= r2
+
+testCompose :: TestTree
+testCompose = testGroup "compose" [testComposeInner, testComposeCommute]

@@ -20,6 +20,7 @@ import Data.Functor.Identity as I
 import Data.Functor.Invariant as I
 import Data.IORef as I
 import Data.Kind as I
+import Data.List.NonEmpty
 import Data.Maybe as I
 import Data.Monoid as I
 import Data.Semigroup.Commutative as I
@@ -33,3 +34,7 @@ import Data.Void as I
 import Prelude as I hiding (fail, id, (.))
 
 instance Subsingular a => Commutative (Endo a)
+
+instance Subsingular a => Commutative [a]
+
+instance Subsingular a => Commutative (NonEmpty a)
