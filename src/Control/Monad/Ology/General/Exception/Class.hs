@@ -57,6 +57,14 @@ instance MonadException IO where
     throwExc = CE.throwIO
     catchExc = CE.catch
 
+handleExc ::
+    forall m a.
+    MonadException m =>
+    (Exc m -> m a) ->
+    m a ->
+    m a
+handleExc handler ma = catchExc ma handler
+
 -- | Catch all exceptions, optionally returning or re-throwing.
 catchSomeExc ::
     forall m a.
