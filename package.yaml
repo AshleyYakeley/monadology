@@ -132,6 +132,7 @@ tests:
         - text >= 2.0
         - countable >= 1.3
         - monadology
+        - async >= 2.2
         - tasty >= 1.4
         - tasty-hunit >= 0.10
         main: Main.hs
@@ -139,6 +140,7 @@ tests:
         - Useful
         - Exception
         - Compose
+        - Unlift
         - Coroutine
         - Lifecycle
         - Data
