@@ -32,7 +32,7 @@ import Import
 
 -- | This is for managing the automatic closing of opened resources.
 newtype LifecycleT (m :: Type -> Type) (a :: Type) = MkLifecycleT
-    { unLifecycleT :: DurableWriterT LifeState m a
+    { unLifecycleT :: DurableWriterT (LifeState IO) m a
     }
     deriving newtype
         ( Functor
@@ -84,7 +84,7 @@ instance MonadTransUnlift LifecycleT where
         MkWUnlift unlift <- getDiscardingUnlift
         return $ MkWUnlift $ unlift . unLifecycleT
 
-addLifeState :: MonadIO m => LifeState -> LifecycleT m ()
+addLifeState :: MonadIO m => LifeState IO -> LifecycleT m ()
 addLifeState NoLifeState = return ()
 addLifeState ls = MkLifecycleT $ durableWriterTransaction $ tell ls
 
@@ -131,7 +131,7 @@ getLifeState ::
     forall m a.
     MonadIO m =>
     LifecycleT m a ->
-    m (a, LifeState)
+    m (a, LifeState IO)
 getLifeState (MkLifecycleT rwma) = do
     ((a, collector), _) <- runWriterT $ runDurableAsWriterT $ do
         a <- rwma
@@ -148,7 +148,7 @@ durableWriterGetCollecter :: forall w m. (Monoid w, MonadIO m) => DurableWriterT
 modifyLifeState ::
     forall m.
     MonadIO m =>
-    (LifeState -> LifeState) ->
+    (LifeState IO -> LifeState IO) ->
     LifecycleT m --> LifecycleT m
 modifyLifeState ss la = do
     (a, ls) <- lift $ getLifeState la

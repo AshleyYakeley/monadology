@@ -17,6 +17,9 @@ collect wmr = censor (\_ -> mempty) $ listen wmr
 evalWriterT :: Monad m => WriterT w m a -> m a
 evalWriterT wma = fmap fst $ runWriterT wma
 
+mapWriterOutput :: Monad m => (w1 -> w2) -> WriterT w1 m a -> WriterT w2 m a
+mapWriterOutput f = mapWriterT $ fmap $ fmap f
+
 instance TransConstraint Functor (WriterT w) where
     hasTransConstraint = Dict
 

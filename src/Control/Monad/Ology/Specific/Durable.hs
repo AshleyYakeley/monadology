@@ -8,6 +8,7 @@ module Control.Monad.Ology.Specific.Durable
     , runDurableWriterT
     , runDurableAsWriterT
     , durableWriterTransaction
+    , subDurableWriterT
     , durableWriterGetCollecter
     )
 where
@@ -96,6 +97,9 @@ runDurableWriterT dma = runDurableStateT dma mempty
 
 runDurableAsWriterT :: forall w m a. (Monoid w, MonadIO m) => DurableWriterT w m a -> WriterT w m a
 runDurableAsWriterT dwa = stateWriter $ runDurableAsStateT dwa
+
+subDurableWriterT :: forall w1 w2 m a. (Monoid w1, Monoid w2, MonadIO m) => (w1 -> w2) -> DurableWriterT w1 m a -> DurableWriterT w2 m a
+subDurableWriterT f = durableWriterTransaction . mapWriterOutput f . runDurableAsWriterT
 
 durableWriterTransaction :: forall w m a. (Monoid w, MonadIO m) => WriterT w m a -> DurableWriterT w m a
 durableWriterTransaction wma = do

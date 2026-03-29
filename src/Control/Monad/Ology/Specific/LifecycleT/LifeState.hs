@@ -12,51 +12,51 @@ import Control.Monad.Ology.General
 import Import
 
 -- | This represents all the actions that need to be done when closing the lifecycle.
-newtype LifeState
-    = MkLifeState (Maybe (IO (IO Any)))
+newtype LifeState m
+    = MkLifeState (Maybe (m (m Any)))
 
-instance Semigroup LifeState where
+instance Monad m => Semigroup (LifeState m) where
     MkLifeState Nothing <> q = q
     p <> MkLifeState Nothing = p
-    MkLifeState (Just p) <> MkLifeState (Just q) = MkLifeState $ Just $ q <> p
+    MkLifeState (Just p) <> MkLifeState (Just q) = MkLifeState $ Just $ liftA2 (liftA2 (<>)) q p
 
-instance Monoid LifeState where
+instance Monad m => Monoid (LifeState m) where
     mempty = MkLifeState Nothing
 
-pattern NoLifeState :: LifeState
+pattern NoLifeState :: LifeState m
 pattern NoLifeState = MkLifeState Nothing
 
-mkLifeState :: IO () -> LifeState
+mkLifeState :: forall m. Monad m => m () -> LifeState m
 mkLifeState closer = MkLifeState
     $ Just
     $ do
         closer
         return $ return $ Any False
 
-lifeStateModify :: (IO --> IO) -> LifeState -> LifeState
+lifeStateModify :: forall m1 m2. Monad m1 => (m1 --> m2) -> LifeState m1 -> LifeState m2
 lifeStateModify _ (MkLifeState Nothing) = MkLifeState Nothing
 lifeStateModify m (MkLifeState (Just ioioa)) = MkLifeState $ Just $ m $ fmap m ioioa
 
-closeIOAny :: IO Any -> IO ()
+closeIOAny :: forall m. Monad m => m Any -> m ()
 closeIOAny ioa = do
     Any b <- ioa
     if b
         then closeIOAny ioa
         else return ()
 
-closeLifeState' :: LifeState -> IO Any
+closeLifeState' :: forall m. Monad m => LifeState m -> m Any
 closeLifeState' (MkLifeState (Just ioioa)) = do
     ioa <- ioioa
     closeIOAny ioa
     return $ Any True
 closeLifeState' (MkLifeState Nothing) = return $ Any False
 
-closeLifeState :: LifeState -> IO ()
+closeLifeState :: forall m. Monad m => LifeState m -> m ()
 closeLifeState ls = do
     _ <- closeLifeState' ls
     return ()
 
-execLifeState :: IO LifeState -> LifeState
+execLifeState :: forall m. Monad m => m (LifeState m) -> LifeState m
 execLifeState iols =
     MkLifeState
         $ Just
