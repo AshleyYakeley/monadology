@@ -30,7 +30,7 @@ class
     -- | Return an unlifting function that discards the transformer's effects (such as state change or output).
     getDiscardingUnlift ::
         forall m.
-        Monad m =>
+        MonadIO m =>
         t m (WUnlift MonadTunnelIO t)
     getDiscardingUnlift = tunnel $ \unlift -> pure $ pure $ MkWUnlift $ \tma -> fmap mToValue $ unlift tma
 

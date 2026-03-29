@@ -104,3 +104,8 @@ onException ma handler = catchExc ma $ \ex -> handler >> throwExc ex
 -- Of course, since non-termination is bottom, this cannot catch all bottoms.
 catchPureError :: a -> IO (Maybe CE.SomeException)
 catchPureError a = catchExc (CE.evaluate a >> return Nothing) $ \e -> return $ Just e
+
+runWithExc :: forall m a. MonadException m => (forall b. (m a -> m b) -> m b) -> m a
+runWithExc call = do
+    r <- call tryExc
+    fromResultExc r

@@ -237,13 +237,13 @@ instance (MonadTransUnlift outerT, MonadTransUnlift innerT) => MonadTransUnlift 
                             call $ \(MkComposeT t1t2ma) -> unlift2 $ withTransConstraintTM @MonadTunnelIO $ unlift1 t1t2ma
     getDiscardingUnlift ::
         forall m.
-        Monad m =>
+        MonadIO m =>
         ComposeT outerT innerT m (WUnlift MonadTunnelIO (ComposeT outerT innerT))
     getDiscardingUnlift =
-        case hasTransConstraint @Monad @innerT @m of
+        case hasTransConstraint @MonadIO @innerT @m of
             Dict ->
                 MkComposeT
-                    $ withTransConstraintTM @Monad
+                    $ withTransConstraintTM @MonadIO
                     $ do
                         unlift1 <- getDiscardingUnlift
                         unlift2 <- lift getDiscardingUnlift

@@ -25,165 +25,72 @@ module Control.Monad.Ology.Specific.LifecycleT
 where
 
 import Control.Monad.Ology.General
-import Control.Monad.Ology.Specific.StateT
+import Control.Monad.Ology.Specific.Durable
+import Control.Monad.Ology.Specific.LifecycleT.LifeState
+import Control.Monad.Ology.Specific.WriterT
 import Import
-
--- | This represents all the actions that need to be done when closing the lifecycle.
-newtype LifeState
-    = MkLifeState (Maybe (IO (IO Any)))
-
-pattern NoLifeState :: LifeState
-pattern NoLifeState = MkLifeState Nothing
-
-lifeStateModify :: (IO --> IO) -> LifeState -> LifeState
-lifeStateModify _ (MkLifeState Nothing) = MkLifeState Nothing
-lifeStateModify m (MkLifeState (Just ioioa)) = MkLifeState $ Just $ m $ fmap m ioioa
-
-closeIOAny :: IO Any -> IO ()
-closeIOAny ioa = do
-    Any b <- ioa
-    if b
-        then closeIOAny ioa
-        else return ()
-
-closeLifeState' :: LifeState -> IO Any
-closeLifeState' (MkLifeState (Just ioioa)) = do
-    ioa <- ioioa
-    closeIOAny ioa
-    return $ Any True
-closeLifeState' (MkLifeState Nothing) = return $ Any False
-
-closeLifeState :: LifeState -> IO ()
-closeLifeState ls = do
-    _ <- closeLifeState' ls
-    return ()
-
-varLifeState :: MVar LifeState -> LifeState
-varLifeState var =
-    MkLifeState
-        $ Just
-        $ return
-        $ do
-            ls <- takeMVar var
-            putMVar var mempty
-            closeLifeState' ls
-
-instance Semigroup LifeState where
-    MkLifeState Nothing <> q = q
-    p <> MkLifeState Nothing = p
-    MkLifeState (Just p) <> MkLifeState (Just q) = MkLifeState $ Just $ p <> q
-
-instance Monoid LifeState where
-    mempty = MkLifeState Nothing
 
 -- | This is for managing the automatic closing of opened resources.
 newtype LifecycleT (m :: Type -> Type) (a :: Type) = MkLifecycleT
-    { unLifecycleT :: MVar LifeState -> m a
+    { unLifecycleT :: DurableWriterT LifeState m a
     }
+    deriving newtype
+        ( Functor
+        , Applicative
+        , Monad
+        , MonadException
+        , MonadIO
+        , MonadFix
+        , MonadFail
+        , MonadTrans
+        , MonadTransHoist
+        , MonadTransTunnel
+        )
 
-instance Functor m => Functor (LifecycleT m) where
-    fmap ab (MkLifecycleT f) = MkLifecycleT $ \var -> fmap ab $ f var
+deriving newtype instance MonadThrow ex m => MonadThrow ex (LifecycleT m)
+
+deriving newtype instance MonadCatch ex m => MonadCatch ex (LifecycleT m)
 
 instance TransConstraint Functor LifecycleT where
     hasTransConstraint = Dict
 
-instance Applicative m => Applicative (LifecycleT m) where
-    pure t = MkLifecycleT $ \_ -> pure t
-    (MkLifecycleT ocab) <*> (MkLifecycleT oca) = MkLifecycleT $ \var -> ocab var <*> oca var
-
 instance TransConstraint Applicative LifecycleT where
     hasTransConstraint = Dict
-
-instance Monad m => Monad (LifecycleT m) where
-    return = pure
-    (MkLifecycleT va) >>= f =
-        MkLifecycleT $ \var -> do
-            a <- va var
-            unLifecycleT (f a) var
 
 instance TransConstraint Monad LifecycleT where
     hasTransConstraint = Dict
 
-instance MonadTrans LifecycleT where
-    lift ma = MkLifecycleT $ \_ -> ma
-
-instance MonadFail m => MonadFail (LifecycleT m) where
-    fail s = lift $ fail s
-
 instance TransConstraint MonadFail LifecycleT where
     hasTransConstraint = Dict
-
-instance MonadException m => MonadException (LifecycleT m) where
-    type Exc (LifecycleT m) = Exc m
-    throwExc e = lift $ throwExc e
-    catchExc :: forall a. LifecycleT m a -> (Exc m -> LifecycleT m a) -> LifecycleT m a
-    catchExc (MkLifecycleT f) handler = MkLifecycleT $ \var -> catchExc (f var) $ \e -> unLifecycleT (handler e) var
 
 instance TransConstraint MonadException LifecycleT where
     hasTransConstraint = Dict
 
-instance MonadThrow e m => MonadThrow e (LifecycleT m) where
-    throw e = lift $ throw e
-
 instance TransConstraint (MonadThrow e) LifecycleT where
     hasTransConstraint = Dict
-
-instance MonadCatch e m => MonadCatch e (LifecycleT m) where
-    catch (MkLifecycleT f) handler = MkLifecycleT $ \var -> catch (f var) $ \e -> unLifecycleT (handler e) var
 
 instance TransConstraint (MonadCatch e) LifecycleT where
     hasTransConstraint = Dict
 
-instance MonadFix m => MonadFix (LifecycleT m) where
-    mfix f = MkLifecycleT $ \var -> mfix $ \a -> unLifecycleT (f a) var
-
 instance TransConstraint MonadFix LifecycleT where
     hasTransConstraint = Dict
-
-instance MonadIO m => MonadIO (LifecycleT m) where
-    liftIO ioa = lift $ liftIO ioa
 
 instance TransConstraint MonadIO LifecycleT where
     hasTransConstraint = Dict
 
-instance MonadTransHoist LifecycleT where
-    hoist f (MkLifecycleT g) = MkLifecycleT $ \var -> f $ g var
-
-instance MonadTransTunnel LifecycleT where
-    type Tunnel LifecycleT = Identity
-    tunnel ::
-        forall m r.
-        Monad m =>
-        ((forall m1 a. Monad m1 => LifecycleT m1 a -> m1 (Identity a)) -> m (Identity r)) ->
-        LifecycleT m r
-    tunnel f = MkLifecycleT $ \var -> fmap runIdentity $ f $ \a -> fmap Identity $ unLifecycleT a var
-
 instance MonadTransUnlift LifecycleT where
-    liftWithUnlift call = MkLifecycleT $ \var -> call $ \(MkLifecycleT f) -> f var
-    getDiscardingUnlift =
-        return
-            $ MkWUnlift
-            $ \(MkLifecycleT f) -> do
-                var <- liftIO $ newMVar mempty
-                f var
+    liftWithUnlift call = MkLifecycleT $ liftWithUnlift $ \unlift -> call $ unlift . unLifecycleT
+    getDiscardingUnlift = MkLifecycleT $ do
+        MkWUnlift unlift <- getDiscardingUnlift
+        return $ MkWUnlift $ unlift . unLifecycleT
 
 addLifeState :: MonadIO m => LifeState -> LifecycleT m ()
-addLifeState (MkLifeState Nothing) = return ()
-addLifeState ls =
-    MkLifecycleT $ \var -> do
-        dangerousMVarRunStateT var $ do
-            s <- get
-            put $ ls <> s
+addLifeState NoLifeState = return ()
+addLifeState ls = MkLifecycleT $ durableWriterTransaction $ tell ls
 
 -- | Add a closing action.
 lifecycleOnCloseIO :: MonadIO m => IO () -> LifecycleT m ()
-lifecycleOnCloseIO closer =
-    addLifeState
-        $ MkLifeState
-        $ Just
-        $ do
-            closer
-            return $ return $ Any False
+lifecycleOnCloseIO closer = addLifeState $ mkLifeState closer
 
 -- | Add a closing action.
 lifecycleOnClose :: MonadAskUnliftIO m => m () -> LifecycleT m ()
@@ -197,9 +104,13 @@ withLifecycle ::
     (MonadException m, MonadTunnelIO m) =>
     LifecycleT m a ->
     With m a
-withLifecycle (MkLifecycleT f) run = do
-    var <- liftIO $ newMVar mempty
-    finally (f var >>= run) $ liftIO $ closeLifeState $ varLifeState var
+withLifecycle (MkLifecycleT rwma) run = runWithExc $ \runExc -> do
+    (ma, takeLS) <- liftIO $ runDurableWriterT rwma
+    b <- runExc (ma >>= run)
+    liftIO $ do
+        ls <- takeLS
+        closeLifeState ls
+    return b
 
 -- | Run the lifecycle, then close all resources in reverse order they were opened.
 runLifecycle ::
@@ -221,10 +132,18 @@ getLifeState ::
     MonadIO m =>
     LifecycleT m a ->
     m (a, LifeState)
-getLifeState (MkLifecycleT f) = do
-    var <- liftIO $ newMVar mempty
-    t <- f var
-    return (t, varLifeState var)
+getLifeState (MkLifecycleT rwma) = do
+    ((a, collector), _) <- runWriterT $ runDurableAsWriterT $ do
+        a <- rwma
+        collector <- durableWriterGetCollecter
+        return (a, collector)
+    return (a, execLifeState collector)
+
+{-
+runDurableWriterT :: forall w m a. Monoid w => DurableWriterT w m a -> IO (m a, IO w)
+runDurableAsWriterT :: forall w m a. (Monoid w, MonadIO m) => DurableWriterT w m a -> WriterT w m a
+durableWriterGetCollecter :: forall w m. (Monoid w, MonadIO m) => DurableWriterT w m (IO w)
+-}
 
 modifyLifeState ::
     forall m.

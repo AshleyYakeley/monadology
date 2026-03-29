@@ -449,7 +449,7 @@ stackJoinUnlift w tmm stmm (stma :: StackT (t ': tt) m a) =
                 Dict -> stmm $ MkStackT $ tmm $ unStackT stma
 
 newtype GetDiscardingUnlift t = MkGetDiscardingUnlift
-    { unGetDiscardingUnlift :: forall m. Monad m => t m (WUnlift MonadTunnelIO t)
+    { unGetDiscardingUnlift :: forall m. MonadIO m => t m (WUnlift MonadTunnelIO t)
     }
 
 instance MonadTransStackUnlift tt => MonadTransUnlift (StackT tt) where
@@ -479,7 +479,7 @@ instance MonadTransStackUnlift tt => MonadTransUnlift (StackT tt) where
         in unLiftWithUnlift $ build $ representative @_ @(ListType (Compose Dict MonadTransUnlift)) @tt
     getDiscardingUnlift ::
         forall m.
-        Monad m =>
+        MonadIO m =>
         StackT tt m (WUnlift MonadTunnelIO (StackT tt))
     getDiscardingUnlift = let
         build :: forall tt'. ListType (Compose Dict MonadTransUnlift) tt' -> GetDiscardingUnlift (StackT tt')
@@ -489,13 +489,13 @@ instance MonadTransStackUnlift tt => MonadTransUnlift (StackT tt) where
                 MkGetDiscardingUnlift getDiscardingUnlift' -> let
                     getDiscardingUnlift'' ::
                         forall m'.
-                        Monad m' =>
+                        MonadIO m' =>
                         StackT tt' m' (WUnlift MonadTunnelIO (StackT tt'))
                     getDiscardingUnlift'' =
                         MkStackT
-                            $ case witTransStackDict @Monad @tt0 @m' $ mapListType (\(Compose Dict) -> Compose Dict) w of
+                            $ case witTransStackDict @MonadIO @tt0 @m' $ mapListType (\(Compose Dict) -> Compose Dict) w of
                                 Dict ->
-                                    withTransConstraintTM @Monad $ do
+                                    withTransConstraintTM @MonadIO $ do
                                         MkWUnlift unlift1 <- getDiscardingUnlift
                                         MkWUnlift unlift2 <- lift $ unStackT $ getDiscardingUnlift' @m'
                                         return $ MkWUnlift $ stackJoinUnlift w unlift1 unlift2

@@ -11,6 +11,7 @@ import Control.Monad.Ology.Specific.ComposeOuter as I
 import Control.Monad.Ology.Specific.ComposeT as I
 import Control.Monad.Ology.Specific.ContT as I
 import Control.Monad.Ology.Specific.CoroutineT as I
+import Control.Monad.Ology.Specific.Durable as I
 import Control.Monad.Ology.Specific.ExceptT as I
 import Control.Monad.Ology.Specific.IdentityT as I
 import Control.Monad.Ology.Specific.LifecycleT as I
