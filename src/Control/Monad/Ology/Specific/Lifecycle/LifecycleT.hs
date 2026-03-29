@@ -1,4 +1,4 @@
-module Control.Monad.Ology.Specific.LifecycleT
+module Control.Monad.Ology.Specific.Lifecycle.LifecycleT
     ( LifecycleT (..)
     , Lifecycle
     , runLifecycle
@@ -26,7 +26,7 @@ where
 
 import Control.Monad.Ology.General
 import Control.Monad.Ology.Specific.Durable
-import Control.Monad.Ology.Specific.LifecycleT.LifeState
+import Control.Monad.Ology.Specific.Lifecycle.LifeState
 import Control.Monad.Ology.Specific.WriterT
 import Import
 

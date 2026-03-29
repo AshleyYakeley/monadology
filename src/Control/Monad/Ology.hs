@@ -14,7 +14,7 @@ import Control.Monad.Ology.Specific.CoroutineT as I
 import Control.Monad.Ology.Specific.Durable as I
 import Control.Monad.Ology.Specific.ExceptT as I
 import Control.Monad.Ology.Specific.IdentityT as I
-import Control.Monad.Ology.Specific.LifecycleT as I
+import Control.Monad.Ology.Specific.Lifecycle.LifecycleT as I
 import Control.Monad.Ology.Specific.MaybeT as I
 import Control.Monad.Ology.Specific.ReaderStateT as I
 import Control.Monad.Ology.Specific.ReaderT as I

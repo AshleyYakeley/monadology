@@ -1,4 +1,4 @@
-module Control.Monad.Ology.Specific.LifecycleT.LifeState
+module Control.Monad.Ology.Specific.Lifecycle.LifeState
     ( LifeState
     , pattern NoLifeState
     , mkLifeState

@@ -68,8 +68,8 @@ library
       Control.Monad.Ology.Specific.StepT
       Control.Monad.Ology.Specific.CoroutineT
       Control.Monad.Ology.Specific.Durable
-      Control.Monad.Ology.Specific.LifecycleT.LifeState
-      Control.Monad.Ology.Specific.LifecycleT
+      Control.Monad.Ology.Specific.Lifecycle.LifeState
+      Control.Monad.Ology.Specific.Lifecycle.LifecycleT
       Control.Monad.Ology.Data.Exn
       Control.Monad.Ology.Data.Param
       Control.Monad.Ology.Data.Prod
