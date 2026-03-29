@@ -46,7 +46,7 @@ testLifecycleWith =
 
 testLifeCycleGetState :: TestTree
 testLifeCycleGetState =
-    testCase "with"
+    testCase "get-state"
         $ compareTest "ACEFDB"
         $ \appendStr -> do
             let
