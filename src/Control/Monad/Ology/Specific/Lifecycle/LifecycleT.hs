@@ -133,10 +133,11 @@ getLifeState ::
     LifecycleT m a ->
     m (a, LifeState IO)
 getLifeState (MkLifecycleT rwma) = do
-    ((a, collector), _) <- runWriterT $ runDurableAsWriterT $ do
+    (ma, _) <- liftIO $ runDurableWriterT $ do
         a <- rwma
         collector <- durableWriterGetCollecter
         return (a, collector)
+    (a, collector) <- ma
     return (a, execLifeState collector)
 
 {-
