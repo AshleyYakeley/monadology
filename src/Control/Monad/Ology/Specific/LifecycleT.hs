@@ -133,18 +133,9 @@ getLifeState ::
     LifecycleT m a ->
     m (a, LifeState)
 getLifeState (MkLifecycleT rwma) = do
-    (ma, _) <- liftIO $ runDurableWriterT $ do
-        a <- rwma
-        collector <- durableWriterGetCollecter
-        return (a, collector)
-    (a, collector) <- ma
+    (ma, collector) <- liftIO $ runDurableWriterT rwma
+    a <- ma
     return (a, execLifeState collector)
-
-{-
-runDurableWriterT :: forall w m a. Monoid w => DurableWriterT w m a -> IO (m a, IO w)
-runDurableAsWriterT :: forall w m a. (Monoid w, MonadIO m) => DurableWriterT w m a -> WriterT w m a
-durableWriterGetCollecter :: forall w m. (Monoid w, MonadIO m) => DurableWriterT w m (IO w)
--}
 
 modifyLifeState ::
     forall m.
