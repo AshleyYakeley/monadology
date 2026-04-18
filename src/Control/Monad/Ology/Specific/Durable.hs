@@ -1,15 +1,16 @@
 module Control.Monad.Ology.Specific.Durable
     ( DurableStateT (..)
     , runDurableStateT
+    , runRestoreDurableStateT
     , runDurableAsStateT
     , durableStateTransaction
     , nondurableStateTransaction
-    , DurableWriterT
+    , DurableWriterT (..)
     , runDurableWriterT
     , runDurableAsWriterT
+    , mapDurableWriterT
     , durableWriterTransaction
     , subDurableWriterT
-    , durableWriterGetCollecter
     )
 where
 
@@ -74,6 +75,17 @@ runDurableStateT (MkDurableStateT (ReaderT vma)) olds = do
     var <- newMVar olds
     return (vma var, takeMVar var)
 
+runRestoreDurableStateT :: forall s m a. DurableStateT s m a -> s -> IO (m a, IO s)
+runRestoreDurableStateT (MkDurableStateT (ReaderT vma)) olds = do
+    var <- newMVar olds
+    return
+        ( vma var
+        , do
+            news <- takeMVar var
+            putMVar var olds
+            return news
+        )
+
 runDurableAsStateT :: forall s m a. MonadIO m => DurableStateT s m a -> StateT s m a
 runDurableAsStateT dma = StateT $ \olds -> do
     (run, takeState) <- liftIO $ runDurableStateT dma olds
@@ -87,36 +99,71 @@ durableStateTransaction sma = MkDurableStateT $ ReaderT $ \var -> mVarRunStateT 
 nondurableStateTransaction :: forall s m a. MonadIO m => StateT s m a -> DurableStateT s m a
 nondurableStateTransaction sma = MkDurableStateT $ ReaderT $ \var -> dangerousMVarRunStateT var sma
 
-type DurableWriterT w = DurableStateT w
+newtype DurableWriterT (w :: Type) (m :: Type -> Type) (a :: Type) = MkDurableWriterT
+    { unDurableWriterT :: ReaderT (w -> IO ()) m a
+    }
+    deriving newtype
+        ( Functor
+        , Applicative
+        , Alternative
+        , Monad
+        , MonadException
+        , MonadIO
+        , MonadFail
+        , MonadFix
+        , MonadPlus
+        , MonadTrans
+        , MonadTransHoist
+        , MonadTransTunnel
+        , MonadThrow ex
+        , MonadCatch ex
+        )
+
+instance TransConstraint Functor (DurableWriterT w) where
+    hasTransConstraint = Dict
+
+instance TransConstraint Monad (DurableWriterT w) where
+    hasTransConstraint = Dict
+
+instance TransConstraint MonadIO (DurableWriterT w) where
+    hasTransConstraint = Dict
+
+instance TransConstraint MonadFail (DurableWriterT w) where
+    hasTransConstraint = Dict
+
+instance TransConstraint MonadFix (DurableWriterT w) where
+    hasTransConstraint = Dict
+
+instance TransConstraint MonadPlus (DurableWriterT w) where
+    hasTransConstraint = Dict
+
+instance MonadTransUnlift (DurableWriterT w) where
+    liftWithUnlift call = MkDurableWriterT $ liftWithUnlift $ \unlift -> call $ unlift . unDurableWriterT
+
+mapDurableWriterT :: (w1 -> w2) -> DurableWriterT w1 m --> DurableWriterT w2 m
+mapDurableWriterT f (MkDurableWriterT ra) = MkDurableWriterT $ withReaderT (\push w -> push $ f w) ra
+
+durableWriterStateT :: forall w m. (MonadIO m, Semigroup w) => DurableWriterT w m --> DurableStateT w m
+durableWriterStateT (MkDurableWriterT (ReaderT rma)) = liftWithUnlift $ \unlift ->
+    rma $ \w -> unlift $ durableStateTransaction $ do
+        olds <- get
+        put $ olds <> w
 
 stateWriter :: forall w m a. Monoid w => StateT w m a -> WriterT w m a
 stateWriter (StateT wma) = WriterT $ wma mempty
 
-runDurableWriterT :: forall w m a. Monoid w => DurableWriterT w m a -> IO (m a, IO w)
-runDurableWriterT dma = runDurableStateT dma mempty
+runDurableWriterT :: forall w m a. (Monoid w, MonadIO m) => DurableWriterT w m a -> IO (m a, IO w)
+runDurableWriterT dma = runRestoreDurableStateT (durableWriterStateT dma) mempty
 
 runDurableAsWriterT :: forall w m a. (Monoid w, MonadIO m) => DurableWriterT w m a -> WriterT w m a
-runDurableAsWriterT dwa = stateWriter $ runDurableAsStateT dwa
+runDurableAsWriterT dwa = stateWriter $ runDurableAsStateT $ durableWriterStateT dwa
 
-subDurableWriterT :: forall w1 w2 m a. (Monoid w1, Monoid w2, MonadIO m) => (w1 -> w2) -> DurableWriterT w1 m a -> DurableWriterT w2 m a
+subDurableWriterT :: forall w1 w2 m a. (Monoid w1, MonadIO m) => (w1 -> w2) -> DurableWriterT w1 m a -> DurableWriterT w2 m a
 subDurableWriterT f = durableWriterTransaction . mapWriterOutput f . runDurableAsWriterT
 
-durableWriterTransaction :: forall w m a. (Monoid w, MonadIO m) => WriterT w m a -> DurableWriterT w m a
-durableWriterTransaction wma = do
+durableWriterTransaction :: forall w m a. MonadIO m => WriterT w m a -> DurableWriterT w m a
+durableWriterTransaction wma = MkDurableWriterT $ do
+    push <- ask
     (a, w) <- lift $ runWriterT wma
-    nondurableStateTransaction $ do
-        olds <- get
-        put $ olds <> w
-        return a
-
-durableWriterGetCollecter :: forall w m. (Monoid w, MonadIO m) => DurableWriterT w m (IO w)
-durableWriterGetCollecter =
-    MkDurableStateT
-        $ ReaderT
-        $ \var ->
-            return
-                $ mVarRunStateT var
-                $ do
-                    w <- get
-                    put mempty
-                    return w
+    liftIO $ push w
+    return a
