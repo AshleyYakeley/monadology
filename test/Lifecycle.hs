@@ -44,8 +44,8 @@ testLifecycleWith =
                     liftIO $ appendStr "F"
             runLifecycle lc
 
-testLifeCycleGetState :: TestTree
-testLifeCycleGetState =
+testLifecycleGetState :: TestTree
+testLifecycleGetState =
     testCase "with"
         $ compareTest "ACEFDB"
         $ \appendStr -> do
@@ -66,4 +66,10 @@ testLifeCycleGetState =
             runLifecycle lc2
 
 testLifecycle :: TestTree
-testLifecycle = testGroup "lifecycle" [testLifecycleRun, testLifecycleWith, testLifeCycleGetState]
+testLifecycle =
+    testGroup
+        "lifecycle"
+        [ testLifecycleRun
+        , testLifecycleWith
+        , testLifecycleGetState
+        ]

@@ -6,6 +6,7 @@ import Control.Monad.Ology.General.IO
 import Control.Monad.Ology.General.Outer
 import Control.Monad.Ology.General.Trans.Constraint
 import Control.Monad.Ology.General.Trans.Hoist
+import Control.Monad.Ology.General.Trans.Trans
 import Control.Monad.Ology.General.Trans.Tunnel
 import Control.Monad.Ology.Specific.ComposeOuter
 import Import
@@ -72,6 +73,10 @@ instance MonadUnliftIO IO where
 
 instance (MonadTransUnlift t, MonadUnliftIO m, MonadFail (t m), MonadIO (t m), MonadFix (t m)) => MonadUnliftIO (t m) where
     liftIOWithUnlift call = liftWithUnlift $ \tmama -> liftIOWithUnlift $ \maioa -> call $ maioa . tmama
+    getDiscardingIOUnlift = do
+        MkWUnlift unlift <- getDiscardingUnlift
+        MkWRaised unliftIO <- lift getDiscardingIOUnlift
+        return $ MkWRaised $ unliftIO . unlift
 
 instance MonadTransUnlift t => TransConstraint MonadUnliftIO t where
     hasTransConstraint =
