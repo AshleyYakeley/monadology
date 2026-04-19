@@ -65,6 +65,35 @@ testLifecycleGetState =
                     liftIO $ appendStr "F"
             runLifecycle lc2
 
+type STI = StateT Int IO
+
+testLifecycleStateT :: TestTree
+testLifecycleStateT =
+    testCase "stateT"
+        $ compareTest "0+1+2-1-"
+        $ \appendStr -> do
+            let
+                addOne :: STI ()
+                addOne = do
+                    i <- get
+                    lift $ appendStr $ show i <> "+"
+                    put $ succ i
+                subtractOne :: STI ()
+                subtractOne = do
+                    i <- get
+                    lift $ appendStr $ show i <> "-"
+                    put $ pred i
+                lc :: LifecycleT STI STI ()
+                lc = do
+                    lift $ do
+                        addOne
+                        addOne
+                    lifecycleOnClose $ do
+                        subtractOne
+                        subtractOne
+            ((), i) <- runStateT (runLifecycle lc) 0
+            assertEqual "" 0 i
+
 testLifecycle :: TestTree
 testLifecycle =
     testGroup
@@ -72,4 +101,5 @@ testLifecycle =
         [ testLifecycleRun
         , testLifecycleWith
         , testLifecycleGetState
+        , testLifecycleStateT
         ]
