@@ -2,7 +2,7 @@ module Control.Monad.Ology.Specific.Lifecycle.LifeState
     ( LifeState
     , pattern NoLifeState
     , mkLifeState
-    , lifeStateModify
+    , mapLifeState
     , closeLifeState
     , execLifeState
     )
@@ -33,9 +33,9 @@ mkLifeState closer = MkLifeState
         closer
         return $ return $ Any False
 
-lifeStateModify :: forall m1 m2. Monad m1 => (m1 --> m2) -> LifeState m1 -> LifeState m2
-lifeStateModify _ (MkLifeState Nothing) = MkLifeState Nothing
-lifeStateModify m (MkLifeState (Just ioioa)) = MkLifeState $ Just $ m $ fmap m ioioa
+mapLifeState :: forall m1 m2. Monad m1 => (m1 --> m2) -> LifeState m1 -> LifeState m2
+mapLifeState _ (MkLifeState Nothing) = MkLifeState Nothing
+mapLifeState m (MkLifeState (Just ioioa)) = MkLifeState $ Just $ m $ fmap m ioioa
 
 closeIOAny :: forall m. Monad m => m Any -> m ()
 closeIOAny ioa = do
