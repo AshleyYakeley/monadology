@@ -8,6 +8,7 @@ module Control.Monad.Ology.Specific.Lifecycle.LifecycleT
     , forkLifecycle
     , lifecycleMonitor
     , hoistLifecycleClose
+    , hoistLifecycleBoth
 
       -- * With
     , With
@@ -87,6 +88,9 @@ instance MonadTransUnlift (LifecycleT mc) where
 
 hoistLifecycleClose :: forall mc1 mc2 m. Monad mc1 => (mc1 --> mc2) -> LifecycleT mc1 m --> LifecycleT mc2 m
 hoistLifecycleClose f (MkLifecycleT wa) = MkLifecycleT $ mapDurableWriterT (mapLifeState f) wa
+
+hoistLifecycleBoth :: forall m1 m2. (Monad m1, Monad m2) => (m1 --> m2) -> LifecycleT m1 m1 --> LifecycleT m2 m2
+hoistLifecycleBoth f = hoist f . hoistLifecycleClose f
 
 addLifeState :: forall mc m. MonadIO m => LifeState mc -> LifecycleT mc m ()
 addLifeState NoLifeState = return ()
