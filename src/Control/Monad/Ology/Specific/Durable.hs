@@ -70,6 +70,11 @@ instance MonadTransUnlift (DurableStateT s) where
                 newVar <- liftIO $ newMVar olds
                 runReaderT rvma newVar
 
+instance MonadTransAskUnlift  (DurableStateT s) where
+    askUnlift = MkDurableStateT $ do
+        MkWUnlift unlift <- askUnlift
+        return $ MkWUnlift $ unlift . unDurableStateT
+
 runDurableStateT :: forall s m a. DurableStateT s m a -> s -> IO (m a, IO s)
 runDurableStateT (MkDurableStateT (ReaderT vma)) olds = do
     var <- newMVar olds
@@ -139,6 +144,11 @@ instance TransConstraint MonadPlus (DurableWriterT w) where
 
 instance MonadTransUnlift (DurableWriterT w) where
     liftWithUnlift call = MkDurableWriterT $ liftWithUnlift $ \unlift -> call $ unlift . unDurableWriterT
+
+instance MonadTransAskUnlift  (DurableWriterT s) where
+    askUnlift = MkDurableWriterT $ do
+        MkWUnlift unlift <- askUnlift
+        return $ MkWUnlift $ unlift . unDurableWriterT
 
 mapDurableWriterT :: (w1 -> w2) -> DurableWriterT w1 m --> DurableWriterT w2 m
 mapDurableWriterT f (MkDurableWriterT ra) = MkDurableWriterT $ withReaderT (\push w -> push $ f w) ra

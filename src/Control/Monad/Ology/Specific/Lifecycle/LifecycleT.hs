@@ -86,6 +86,11 @@ instance MonadTransUnlift (LifecycleT mc) where
         MkWUnlift unlift <- getDiscardingUnlift
         return $ MkWUnlift $ unlift . unLifecycleT
 
+instance MonadTransAskUnlift  (LifecycleT mc) where
+    askUnlift = MkLifecycleT $ do
+        MkWUnlift unlift <- askUnlift
+        return $ MkWUnlift $ unlift . unLifecycleT
+
 hoistLifecycleClose :: forall mc1 mc2 m. Monad mc1 => (mc1 --> mc2) -> LifecycleT mc1 m --> LifecycleT mc2 m
 hoistLifecycleClose f (MkLifecycleT wa) = MkLifecycleT $ mapDurableWriterT (mapLifeState f) wa
 
