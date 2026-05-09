@@ -86,7 +86,7 @@ instance MonadTransUnlift (LifecycleT mc) where
         MkWUnlift unlift <- getDiscardingUnlift
         return $ MkWUnlift $ unlift . unLifecycleT
 
-instance MonadTransAskUnlift  (LifecycleT mc) where
+instance MonadTransAskUnlift (LifecycleT mc) where
     askUnlift = MkLifecycleT $ do
         MkWUnlift unlift <- askUnlift
         return $ MkWUnlift $ unlift . unLifecycleT
