@@ -115,7 +115,13 @@ withParamRef (param :: _ a) = let
     in MkRef{..}
 
 liftWithT ::
-    forall t m.
-    (MonadTransUnlift t, MonadTunnelIO m) =>
+    forall (t :: TransKind) m.
+    (MonadTransTunnel t, Monad m) =>
     WithT m --> WithT (t m)
-liftWithT (MkWithT aff) = MkWithT $ \atf -> liftWithUnlift $ \unlift -> aff $ unlift . atf
+liftWithT (MkWithT aff) = MkWithT $ \atf -> tunnel $ \tun -> aff $ tun . atf
+
+liftIOWithT ::
+    forall m.
+    MonadTunnelIO m =>
+    WithT IO --> WithT m
+liftIOWithT (MkWithT aff) = MkWithT $ \atf -> tunnelIO $ \tun -> aff $ tun . atf
