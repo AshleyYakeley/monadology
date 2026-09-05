@@ -5,9 +5,9 @@ where
 
 import Control.Applicative
 import Data.IORef
+import Prelude
 import Test.Tasty
 import Test.Tasty.HUnit
-import Prelude
 
 import Control.Monad.Ology
 import Useful
@@ -88,25 +88,25 @@ transformInfo = MkInfo{iName = "WithT IO", iRun = iRunWithT, iExc = MkTestExc}
 
 testCatch :: Info -> TestTree
 testCatch MkInfo{..} =
-    testCase iName
-        $ compareTest "ABCE"
-        $ \post -> do
-            post "A"
-            found <-
-                iRun
-                    $ try
-                    $ do
-                        liftIO $ post "B"
-                        reu <-
-                            try $ do
-                                liftIO $ post "C"
-                                () <- throw $ iExc 52
-                                liftIO $ post "D"
-                        liftIO $ assertEqual "exc1" (FailureResult $ iExc 52) reu
-                        liftIO $ post "E"
-                        () <- throw $ iExc 74
-                        liftIO $ post "F"
-            assertEqual "exc2" (FailureResult $ iExc 74) found
+    testCase iName $
+        compareTest "ABCE" $
+            \post -> do
+                post "A"
+                found <-
+                    iRun $
+                        try $
+                            do
+                                liftIO $ post "B"
+                                reu <-
+                                    try $ do
+                                        liftIO $ post "C"
+                                        () <- throw $ iExc 52
+                                        liftIO $ post "D"
+                                liftIO $ assertEqual "exc1" (FailureResult $ iExc 52) reu
+                                liftIO $ post "E"
+                                () <- throw $ iExc 74
+                                liftIO $ post "F"
+                assertEqual "exc2" (FailureResult $ iExc 74) found
 
 testCatches :: TestTree
 testCatches = testGroup "catch" [testCatch ioInfo, testCatch transformInfo]

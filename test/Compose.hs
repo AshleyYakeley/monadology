@@ -8,9 +8,9 @@ import Control.Applicative
 import Data.Functor.Identity
 import Data.IORef
 import Data.Subsingular
+import Prelude
 import Test.Tasty
 import Test.Tasty.HUnit
-import Prelude
 
 import Control.Monad.Ology
 

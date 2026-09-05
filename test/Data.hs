@@ -4,9 +4,9 @@ module Data
 where
 
 import Data.Text
+import Prelude
 import Test.Tasty
 import Test.Tasty.HUnit
-import Prelude
 
 import Control.Monad.Ology
 

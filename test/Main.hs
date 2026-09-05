@@ -3,8 +3,8 @@ module Main
     )
 where
 
-import Test.Tasty
 import Prelude
+import Test.Tasty
 
 import Compose
 import Coroutine
