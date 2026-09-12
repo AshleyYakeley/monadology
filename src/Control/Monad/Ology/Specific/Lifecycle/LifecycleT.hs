@@ -9,6 +9,7 @@ module Control.Monad.Ology.Specific.Lifecycle.LifecycleT
     , lifecycleMonitor
     , hoistLifecycleClose
     , hoistLifecycleBoth
+    , replaceLifecycles
 
       -- * With
     , With
@@ -29,6 +30,7 @@ where
 import Control.Monad.Ology.General
 import Control.Monad.Ology.Specific.Durable
 import Control.Monad.Ology.Specific.Lifecycle.LifeState
+import Control.Monad.Ology.Specific.StateT
 import Control.Monad.Ology.Specific.WriterT
 import Import
 
@@ -193,6 +195,25 @@ lifecycleWith withX = do
     (t, closer) <- lift $ unpickWith withX
     lifecycleOnClose closer
     return t
+
+replaceLifecycles :: forall m a. MonadTunnelIO m => ((LifecycleT m m --> m) -> LifecycleT m m a) -> LifecycleT m m a
+replaceLifecycles call = do
+    stateVar :: MVar (LifeState m) <- liftIO $ newMVar mempty
+    let
+        clearState :: m ()
+        clearState = mVarRunStateT stateVar $ do
+            oldLS <- get
+            lift $ closeLifeState oldLS
+            put mempty
+    r <- call $ \lc -> do
+        clearState
+        (b, newLS) <- getLifeState lc
+        mVarRunStateT stateVar $ do
+            oldLS <- get
+            put $ oldLS <> newLS
+        return b
+    lifecycleOnClose $ clearState
+    return r
 
 -- | This is the expected most common use.
 type Lifecycle = LifecycleT IO IO
