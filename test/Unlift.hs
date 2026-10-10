@@ -19,19 +19,28 @@ testUnliftStateT = testCase "unliftStateT" $
             let
                 example :: StateT Int IO ()
                 example = liftWithUnlift $ \unlift -> do
-                    a <- async $ do
-                        appendStr "a"
-                        threadDelay 500
-                        appendStr "b"
-                        threadDelay 500
-                        unlift $ modify succ
-                    threadDelay 250
-                    appendStr "A"
-                    threadDelay 500
-                    appendStr "B"
-                    threadDelay 250
-                    unlift $ modify succ
-                    wait a
+                    lowerDone <- newEmptyMVar
+                    upperDone <- newEmptyMVar
+                    -- Synchronise the output explicitly; delays do not guarantee thread ordering.
+                    withAsync
+                        ( do
+                            appendStr "a"
+                            putMVar lowerDone ()
+                            takeMVar upperDone
+                            appendStr "b"
+                            putMVar lowerDone ()
+                            takeMVar upperDone
+                            unlift $ modify succ
+                        )
+                        $ \a -> do
+                            takeMVar lowerDone
+                            appendStr "A"
+                            putMVar upperDone ()
+                            takeMVar lowerDone
+                            appendStr "B"
+                            putMVar upperDone ()
+                            unlift $ modify succ
+                            wait a
             ((), newState) <- runStateT example 0
             appendStr $ "=" <> show newState
             return ()
